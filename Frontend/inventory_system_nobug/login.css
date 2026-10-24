@@ -1,0 +1,224 @@
+/* ---------- Colors ---------- */
+:root {
+  --green-dark: #1f4d3a;
+  --green-mid: #5c8374;
+  --red: #a94442;
+  --text: #ffffff;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* ---------- Page background ---------- */
+body {
+  background-color: #5c8374;
+  background-image: url("images/main-bg (1).jpg");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+
+  font-family: 'Outfit', Arial, Helvetica, sans-serif;
+  color: var(--text);
+
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ---------- Big dark green panel ---------- */
+/* Sized in vw/vh (not px) so its shape stays the same when you zoom */
+.panel {
+  width: 96vw;
+  height: 88vh;
+  border-radius: 0.73vw; /* 14px on a 1920px screen */
+
+  background-color: #3f5a4d;
+  background-image: url("images/panel-bg.png");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+
+  /* center the login card inside the panel */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ---------- Frosted glass card ---------- */
+/* Everything inside is sized in em. The card's font-size follows the
+   window width (0.833vw = 16px on a 1920px screen), so the whole card
+   scales together with the panel when you zoom. */
+.login-card {
+  position: relative; /* lets the logo sit above the card */
+  font-size: 0.833vw;
+  width: 21.25em;
+  padding: 1.6em 3.8em 3.6em;
+  border-radius: 0.75em;
+
+  background: rgba(255, 255, 255, 0.15);
+  border: 0.0625em solid rgba(255, 255, 255, 0.3);
+  backdrop-filter: blur(0.625em);
+  -webkit-backdrop-filter: blur(0.625em);
+  box-shadow: 0 0.5em 2em rgba(0, 0, 0, 0.2);
+}
+
+/* Logo sits outside the card, centered just above its top edge */
+.logo {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 2.75em;
+  height: 2.75em;
+  object-fit: contain;
+  border-radius: 0.6em;
+  margin-bottom: 0.5em;
+}
+
+.system-name {
+  text-align: center;
+  font-size: 1.4em;
+  font-weight: 300;
+  margin-bottom: 1.4em;
+}
+
+h1 {
+  font-size: 1.3em;
+  font-weight: 600;
+  margin-bottom: 0.9em;
+}
+
+/* ---------- Form ---------- */
+.field {
+  margin-bottom: 0.8em;
+}
+
+.field label {
+  display: block;
+  font-size: 0.75em;
+  font-weight: 400;
+  margin-bottom: 0.35em;
+}
+
+.field input {
+  width: 100%;
+  height: 2.2em;
+  padding: 0 1.2em;
+  border: none;
+  border-radius: 0.4em;
+  font-family: inherit;
+  font-size: 0.8em;
+  background: #ffffff;
+  color: #222;
+}
+
+.field input::placeholder {
+  color: #b3b3b3;
+}
+
+.field input:focus {
+  outline: 0.125em solid var(--green-dark);
+  outline-offset: 0.0625em;
+}
+
+/* password box with the eye icon on the right */
+.password-wrap {
+  position: relative;
+}
+
+.password-wrap input {
+  padding-right: 2.6em;
+}
+
+.toggle-pw {
+  position: absolute;
+  top: 50%;
+  right: 0.7em;
+  transform: translateY(-50%);
+  width: 1.1em;
+  height: 1.1em;
+  padding: 0;
+  border: none;
+  background: none;
+  color: #b3b3b3;
+  cursor: pointer;
+}
+
+.toggle-pw svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.eye-slash {
+  display: none; /* shown while the password is visible */
+}
+
+.toggle-pw.visible .eye-slash {
+  display: block;
+}
+
+.toggle-pw:hover {
+  color: #777;
+}
+
+.forgot {
+  display: block;
+  font-size: 0.72em;
+  color: var(--text);
+  text-decoration: none;
+  margin-bottom: 1.6em;
+}
+
+.forgot:hover {
+  text-decoration: underline;
+}
+
+.error {
+  background: rgba(169, 68, 66, 0.9);
+  font-size: 0.75em;
+  text-align: center;
+  padding: 0.6em;
+  border-radius: 0.4em;
+  margin-bottom: 1em;
+}
+
+.btn-signin {
+  width: 100%;
+  height: 2.3em;
+  border: none;
+  border-radius: 0.35em;
+  background: #285a4c;
+  color: #ffffff;
+  font-family: inherit;
+  font-size: 0.85em;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.btn-signin:hover {
+  background: #1f4a3e;
+}
+
+.btn-signin:focus-visible {
+  outline: 0.125em solid #ffffff;
+  outline-offset: 0.125em;
+}
+
+/* Phones / tablets only: keep the card a readable size.
+   Desktop browsers keep scaling, however much you zoom. */
+@media (pointer: coarse) {
+  .login-card {
+    font-size: 16px;
+    width: 90%;
+    max-width: 21.25em;
+    padding-left: 2em;
+    padding-right: 2em;
+  }
+}
