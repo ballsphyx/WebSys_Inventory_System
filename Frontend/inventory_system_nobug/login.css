@@ -136,6 +136,7 @@ h1 {
 }
 
 .toggle-pw {
+  font-size: 1em; /* buttons ignore the card's font size unless told to follow it */
   position: absolute;
   top: 50%;
   right: 0.7em;

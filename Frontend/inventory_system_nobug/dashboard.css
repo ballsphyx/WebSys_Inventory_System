@@ -1,0 +1,573 @@
+:root {
+  --green-dark: #1b3f31;
+  --green-active: #4f7463;
+  --bg: #f5f5f5;
+
+  /* Measured from the window itself, with no min/max limits,
+     so they look the same at any zoom level */
+  --sidebar-w: 11.5vw;
+  --topbar-h: 10vh;
+}
+
+/* Everything is sized in rem.
+   1rem = 0.833vw = 16px on a 1920px screen, so it all scales together on zoom. */
+html {
+  font-size: 0.833vw;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: var(--bg);
+  font-family: 'Inter', Arial, Helvetica, sans-serif;
+}
+
+/* Page frame: exactly one screen tall, like your Figma frame */
+.app {
+  display: grid;
+  grid-template-columns: var(--sidebar-w) 1fr;
+  grid-template-rows: var(--topbar-h) 1fr;
+  height: 100vh;
+}
+
+/* ---------- Top bar ---------- */
+.topbar {
+  grid-column: 1 / -1;
+  background: var(--green-dark);
+  color: #ffffff;
+
+  display: flex;
+  align-items: center;
+  padding-left: 1.6rem;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.brand img {
+  width: 3.25rem;
+  height: 3.25rem;
+  border-radius: 0.8rem;
+  object-fit: contain;
+}
+
+.brand h1 {
+  font-size: 2.2rem;
+  font-weight: 400;
+  white-space: nowrap;
+}
+
+.search {
+  width: 49vw;
+  height: 3.8rem;
+  margin-left: auto;
+  margin-right: 6.2vw;
+  padding: 0 1.5rem 0 3.2rem;
+
+  display: flex;
+  align-items: center;
+  gap: 1.55rem;
+
+  background: #ffffff;
+  color: #8a8a8a;
+  border-radius: 999px;
+}
+
+.search svg {
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+}
+
+.search input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-family: inherit;
+  font-size: 1.1rem;
+  color: #222222;
+}
+
+.search input::placeholder {
+  color: #8a8a8a;
+}
+
+/* ---------- Sidebar ---------- */
+.sidebar {
+  background: var(--green-dark);
+  color: #ffffff;
+
+  display: flex;
+  flex-direction: column;
+  padding-top: 5.8rem;
+}
+
+.sidebar svg {
+  flex-shrink: 0;
+}
+
+.profile {
+  text-align: center;
+}
+
+.avatar {
+  width: 6.1rem;
+  height: 6.1rem;
+  margin: 0 auto 0.5rem;
+  border-radius: 50%;
+  background: #ffffff;
+  color: #2d5a16;
+
+  display: grid;
+  place-items: center;
+}
+
+.avatar svg {
+  width: 3.7rem;
+  height: 3.7rem;
+}
+
+.profile small {
+  display: block;
+  font-size: 0.7rem;
+  line-height: 1rem;
+  letter-spacing: 0.02em;
+  color: #7a9689;
+}
+
+.profile strong {
+  display: block;
+  font-size: 0.95rem;
+  line-height: 1.2rem;
+  font-weight: 500;
+}
+
+.nav-label {
+  font-size: 0.7rem;
+  margin: 0.9rem 0 0.8rem 1.45rem;
+}
+
+.nav a {
+  height: 3.8rem;
+  padding-left: 1.5rem;
+  border-radius: 0.8rem;
+
+  display: flex;
+  align-items: center;
+  gap: 1.2rem;
+
+  color: #9db3a7;
+  text-decoration: none;
+  font-size: 0.95rem;
+}
+
+.nav a svg {
+  width: 1.4rem;
+  height: 1.4rem;
+}
+
+.nav a:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.nav a.active {
+  background: var(--green-active);
+  color: #ffffff;
+}
+
+.logout {
+  margin-top: auto;
+  margin-bottom: 3.2rem;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.9rem;
+
+  color: #ffffff;
+  text-decoration: none;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.logout svg {
+  width: 1.7rem;
+  height: 1.7rem;
+}
+
+/* ---------- Content area ---------- */
+/* The numbers are measured from your Figma (in px), used as proportions:
+   rows = top gap, stats, gap, charts, gap, lists, bottom gap */
+.content {
+  background: var(--bg);
+  box-shadow: inset 0.5rem 0 0.65rem -0.5rem rgba(0, 0, 0, 0.12);  /* soft shadow next to the sidebar */
+  min-width: 0;
+  min-height: 0;
+
+  display: grid;
+  grid-template-rows: 18fr 96fr 21fr 301fr 16fr 220fr 27fr;
+}
+
+/* Row 1: stat boxes (uneven gaps, like the design) */
+.stats {
+  grid-row: 2;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 38fr 192fr 27fr 192fr 39fr 192fr 38fr 192fr 27fr;
+}
+
+.stats .stat:nth-child(1) { grid-column: 2; }
+.stats .stat:nth-child(2) { grid-column: 4; }
+.stats .stat:nth-child(3) { grid-column: 6; }
+.stats .stat:nth-child(4) { grid-column: 8; }
+
+.stat {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 2.5rem 0 1.5rem;
+  min-width: 0;
+
+  border-radius: 1.5rem;
+  border: 0.1rem solid;
+}
+
+.stat-green { background: #e5fde9; border-color: #b3d1b7; }
+.stat-pink  { background: #ffe9e9; border-color: #d3b4b4; }
+.stat-red   { background: #ffc6c6; border-color: #cf9f9f; }
+
+.stat-icon {
+  width: 3.6rem;
+  height: 3.6rem;
+  color: #4f4f4f;
+  flex-shrink: 0;
+}
+
+.stat-text {
+  margin-top: 1.6rem;
+  text-align: center;
+}
+
+.stat-text b {
+  display: block;
+  min-height: 3.6rem;                /* keeps the label in place while the number is empty */
+  font-family: 'Poppins', 'Inter', sans-serif;
+  font-size: 2.4rem;
+  font-weight: 500;
+  line-height: 3.6rem;
+  color: #111111;
+}
+
+.stat-text span {
+  display: block;
+  font-size: 1.45rem;
+  line-height: 1.8rem;
+  color: #2b2b2b;
+  white-space: nowrap;
+}
+
+/* Row 2: revenue + top selling */
+.row-charts {
+  grid-row: 4;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 28fr 526fr 28fr 328fr 27fr;
+}
+
+.row-charts > :nth-child(1) { grid-column: 2; }
+.row-charts > :nth-child(2) { grid-column: 4; }
+
+/* Row 3: recent activity + low stock */
+.row-lists {
+  grid-row: 6;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 28fr 547fr 15fr 319fr 28fr;
+}
+
+.row-lists > :nth-child(1) { grid-column: 2; }
+.row-lists > :nth-child(2) { grid-column: 4; }
+
+/* ---------- Cards ---------- */
+.card {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;                  /* extra rows get clipped instead of breaking the layout */
+  padding: 2rem 2rem 1.5rem;
+
+  background: #ffffff;
+  border-radius: 1.3rem;
+  box-shadow: 0 0.1rem 0.6rem rgba(0, 0, 0, 0.06);
+}
+
+.card-raised {
+  box-shadow: 0 0.35rem 0.6rem rgba(0, 0, 0, 0.22);
+}
+
+.card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.card-title {
+  font-family: 'Poppins', 'Inter', sans-serif;
+  font-size: 1.4rem;
+  font-weight: 600;
+  line-height: 1.5rem;
+  color: #14142b;
+}
+
+.title-lg {
+  font-size: 1.9rem;
+  font-weight: 500;
+  line-height: 2rem;
+  color: #111111;
+}
+
+.pill {
+  background: #f0f0f3;
+  color: #6b6b6b;
+  font-size: 0.95rem;
+  padding: 0.4rem 0.8rem;
+  border-radius: 0.5rem;
+}
+
+.view-all {
+  color: #2563eb;
+  font-size: 1rem;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+/* ---------- Revenue chart ---------- */
+.chart {
+  flex: 1;
+  min-height: 0;
+  margin: 1.6rem 0.8rem 0 0;
+
+  display: grid;
+  grid-template-columns: 3.7rem 1fr;
+  grid-template-rows: 1fr auto;
+
+  font-family: 'Poppins', 'Inter', sans-serif;
+}
+
+.y-axis {
+  grid-column: 1;
+  grid-row: 1;
+  margin: -0.5rem 0;                 /* labels line up with the grid lines */
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  font-size: 0.95rem;
+  line-height: 1rem;
+  color: #8a8a8a;
+}
+
+.plot {
+  grid-column: 2;
+  grid-row: 1;
+  position: relative;
+}
+
+.gridlines {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.gridlines i {
+  display: block;
+  border-top: 0.1rem solid #e9e9e9;
+}
+
+.gridlines i:last-child {
+  border-top-color: #c9ccbd;         /* the $0 line */
+}
+
+.bars {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  align-items: end;
+}
+
+.months {
+  grid-column: 2;
+  grid-row: 2;
+  margin-top: 1.3rem;
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  font-size: 0.95rem;
+  color: #8a8a8a;
+  text-align: center;
+}
+
+/* ---------- Top selling donut ---------- */
+.donut-row {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  gap: 2.6rem;
+}
+
+.donut {
+  position: relative;
+  width: 15.15rem;
+  height: 15.15rem;
+  border-radius: 50%;
+  flex-shrink: 0;
+  /* default colors; dashboard.js will set the real percentages later */
+  background: conic-gradient(from 20deg, #10b981 0 20%, #6366f1 20% 65%, #ec4899 65% 100%);
+}
+
+.donut::after {
+  content: "";
+  position: absolute;
+  inset: 2.25rem;
+  background: #ffffff;
+  border-radius: 50%;
+}
+
+.donut-center {
+  position: absolute;
+  inset: 0;
+  z-index: 1;                        /* sits on top of the white hole */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.donut-center b {
+  font-size: 1.7rem;
+  font-weight: 600;
+  line-height: 2rem;
+  color: #14142b;
+}
+
+.donut-center b:empty {
+  display: none;                     /* no gap while the number is empty */
+}
+
+.donut-center small {
+  font-size: 0.9rem;
+  color: #555555;
+}
+
+.legend {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 1.3rem;
+}
+
+.legend li {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  font-size: 0.95rem;
+}
+
+.dot {
+  width: 1rem;
+  height: 1rem;
+  border-radius: 0.25rem;
+  flex-shrink: 0;
+}
+
+.dot-blue  { background: #6366f1; }
+.dot-pink  { background: #ec4899; }
+.dot-green { background: #10b981; }
+
+/* ---------- Lists ---------- */
+.list-head {
+  margin-top: 2rem;
+  padding-bottom: 1.1rem;
+  border-bottom: 0.1rem solid #efefef;
+  font-size: 0.95rem;
+  color: #777777;
+}
+
+.list-head-plain {
+  border-bottom: none;
+}
+
+.activity-cols {
+  display: grid;
+  grid-template-columns: 1fr 9.9rem;
+}
+
+.activity-list,
+.stock-list {
+  list-style: none;
+}
+
+/* Recent activity rows */
+.activity-list li {
+  display: grid;
+  grid-template-columns: 1.6rem 1fr 9.9rem;
+  align-items: center;
+  height: 2.7rem;
+  border-bottom: 0.1rem solid #efefef;
+  font-size: 0.95rem;
+}
+
+.adot {
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: 50%;
+}
+
+.adot-green  { background: #22c55e; }
+.adot-yellow { background: #eab308; }
+.adot-blue   { background: #3b82f6; }
+.adot-red    { background: #ef4444; }
+
+.a-text { color: #1f2937; }
+.a-time { color: #6b7280; }
+
+/* Low stock rows */
+.stock-list li {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 0.6rem;
+}
+
+.thumb {
+  width: 3.4rem;
+  height: 3.4rem;
+  border-radius: 0.8rem;
+  background: #c4c4c4;
+  flex-shrink: 0;
+}
+
+.stock-text strong {
+  display: block;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #111111;
+}
+
+.stock-text small {
+  display: block;
+  font-size: 0.75rem;
+  color: #ef4444;
+}

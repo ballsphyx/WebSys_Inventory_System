@@ -54,5 +54,19 @@
   </div>
 
   <script src="js/auth.js"></script>
+
+  <!-- Show / hide password (eye icon) -->
+  <script>
+    (function () {
+      var input = document.getElementById("password");
+      var btn = document.getElementById("togglePw");
+      btn.addEventListener("click", function () {
+        var hidden = input.type === "password";
+        input.type = hidden ? "text" : "password";
+        btn.classList.toggle("visible", hidden);
+        btn.setAttribute("aria-label", hidden ? "Hide password" : "Show password");
+      });
+    })();
+  </script>
 </body>
 </html>
