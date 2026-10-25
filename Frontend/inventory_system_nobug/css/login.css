@@ -15,7 +15,7 @@
 /* ---------- Page background ---------- */
 body {
   background-color: #5c8374;
-  background-image: url("images/main-bg (1).jpg");
+  background-image: url("../images/main-bg (1).jpg");
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
@@ -38,7 +38,7 @@ body {
   border-radius: 0.73vw; /* 14px on a 1920px screen */
 
   background-color: #3f5a4d;
-  background-image: url("images/panel-bg.png");
+  background-image: url("../images/panel-bg.png");
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;

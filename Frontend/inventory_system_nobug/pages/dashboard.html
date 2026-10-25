@@ -4,18 +4,19 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Dashboard | Inventory System</title>
-  <link rel="icon" type="image/png" href="images/logo_4k.png" />
+  <link rel="icon" type="image/png" href="../images/logo_4k.png" />
 
   <!-- Fonts: Inter (text) + Poppins (card titles) -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@400;500;600&display=swap" rel="stylesheet" />
 
-  <link rel="stylesheet" href="dashboard.css" />
+  
+  <link rel="stylesheet" href="../css/dashboard.css" />
 
   <!-- Login protection: turn this on once the layout is finished.
        While it's on, you can only open this page after logging in. -->
-  <!-- <script src="guard.js"></script> -->
+  <!-- <script src="../js/guard.js"></script> -->
 </head>
 <body>
 
@@ -23,7 +24,7 @@
 
     <header class="topbar" id="topbar">
       <div class="brand">
-        <img src="images/logo_4k.png" alt="Inventory System logo" />
+        <img src="../images/logo_4k.png" alt="Inventory System logo" />
         <h1>Welcome <span id="welcomeName">Zaheed</span>!</h1>
       </div>
 
@@ -83,7 +84,7 @@
         </a>
       </nav>
 
-      <a href="#" class="logout" id="logout">
+      <a href="../index.html" class="logout" id="logout">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <rect x="3" y="3" width="11" height="18" rx="2" fill="currentColor" />
           <path d="M14 12h8M18.5 8l3.5 4-3.5 4" />
@@ -178,7 +179,7 @@
         <div class="card">
           <div class="card-head">
             <h2 class="card-title">Recent Activity</h2>
-            <a href="#" class="view-all">View all</a>
+            <a href="transactions.html" class="view-all" id="viewAllLink">View all</a>
           </div>
           <div class="list-head activity-cols">
             <span>Activity</span><span>Date &amp; Time</span>
@@ -208,6 +209,24 @@
 
   </div>
 
-  <script src="dashboard.js"></script>
+  <!-- Pop-up: Recent Activity (View all) -->
+  <div class="modal-overlay" id="activityModal" hidden aria-hidden="true">
+    <section class="modal-card" role="dialog" aria-modal="true" aria-labelledby="activityModalTitle">
+      <div class="card-head">
+        <h2 class="card-title" id="activityModalTitle">Recent Activity</h2>
+        <button type="button" class="modal-back" id="modalBack" aria-label="Back">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M19 12H5M12 19l-7-7 7-7" />
+          </svg>
+        </button>
+      </div>
+      <div class="list-head activity-cols">
+        <span>Activity</span><span>Date &amp; Time</span>
+      </div>
+      <ul class="activity-list modal-list" id="activityModalList"></ul>
+    </section>
+  </div>
+
+  <script src="../js/dashboard.js"></script>
 </body>
 </html>

@@ -1,7 +1,7 @@
 // TEMPORARY demo login (front-end only, NOT secure).
 // Replace with a real backend check later.
 const DEMO_EMAIL = "admin@example.com";
-const DEMO_PASSWORD = "admin123"; 
+const DEMO_PASSWORD = "admin123";
 
 const form = document.getElementById("loginForm");
 const errorMsg = document.getElementById("errorMsg");
@@ -19,7 +19,7 @@ form.addEventListener("submit", function (event) {
 
   if (email === DEMO_EMAIL && password === DEMO_PASSWORD) {
     sessionStorage.setItem("loggedIn", "true");
-    window.location.href = "dashboard.html";
+    window.location.href = "pages/dashboard.html";
   } else {
     showError("Incorrect email or password.");
   }

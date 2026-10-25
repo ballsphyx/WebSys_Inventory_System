@@ -1,8 +1,7 @@
-// Put this in the <head> of every page EXCEPT the login page.
 // Sends people back to the login page if they haven't signed in.
-// (Front-end only: fine for learning, NOT real security.)
+// Add to every page inside /pages (NOT to index.html).
 if (sessionStorage.getItem("loggedIn") !== "true") {
-  window.location.replace("index.html");
+  window.location.replace("../index.html");
 }
 
 document.addEventListener("DOMContentLoaded", function () {
@@ -11,7 +10,7 @@ document.addEventListener("DOMContentLoaded", function () {
     logout.addEventListener("click", function (e) {
       e.preventDefault();
       sessionStorage.removeItem("loggedIn");
-      window.location.href = "index.html";
+      window.location.href = "../index.html";
     });
   }
 });

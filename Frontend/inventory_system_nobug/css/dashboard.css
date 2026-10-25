@@ -543,20 +543,38 @@ body {
 .a-text { color: #1f2937; }
 .a-time { color: #6b7280; }
 
-/* Low stock rows */
+/* Low stock rows (scrolls inside the card, like the View all pop-up) */
+.stock-list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  padding-right: 0.5rem;
+}
+
 .stock-list li {
   display: flex;
   align-items: center;
   gap: 1rem;
   margin-bottom: 0.6rem;
+  flex-shrink: 0;                    /* rows keep their size instead of squashing */
 }
 
+/* Product picture box: grey placeholder, or the real picture when there is one */
 .thumb {
   width: 3.4rem;
   height: 3.4rem;
   border-radius: 0.8rem;
   background: #c4c4c4;
+  overflow: hidden;
   flex-shrink: 0;
+}
+
+.thumb img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;                 /* crops to fill the box without stretching */
 }
 
 .stock-text strong {
@@ -570,4 +588,160 @@ body {
   display: block;
   font-size: 0.75rem;
   color: #ef4444;
+}
+
+.stock-text small.warn {
+  color: #f59e0b;
+}
+
+/* ---------- Clickable links ---------- */
+.logout,
+.view-all {
+  cursor: pointer;
+}
+
+.logout:hover {
+  opacity: 0.8;
+}
+
+.view-all:hover {
+  text-decoration: underline;
+}
+
+/* ---------- Pop-up: Recent Activity (View all) ---------- */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+
+  /* same frame as the page, so the pop-up lands inside the content area */
+  display: grid;
+  grid-template-columns: var(--sidebar-w) 1fr;
+  grid-template-rows: var(--topbar-h) 1fr;
+
+  background: rgba(90, 90, 90, 0.25);   /* dims the whole page */
+  backdrop-filter: blur(0.25rem);
+  -webkit-backdrop-filter: blur(0.25rem);
+}
+
+.modal-overlay[hidden] {
+  display: none;
+}
+
+.modal-card {
+  grid-column: 2;
+  grid-row: 2;
+  margin: 9.8vh 3.7vw 7.4vh 2.6vw;      /* measured from your Figma */
+  min-height: 0;
+
+  display: flex;
+  flex-direction: column;
+  padding: 1.7rem 2.1rem 0.6rem;
+
+  background: #ffffff;
+  border-radius: 1.3rem;
+  box-shadow: 0 0.5rem 2rem rgba(0, 0, 0, 0.15);
+}
+
+.modal-card .activity-cols {
+  grid-template-columns: 1fr 10.3rem;
+  margin-top: 1.4rem;
+}
+
+.modal-list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;                      /* long lists scroll inside the pop-up */
+  scrollbar-width: thin;
+}
+
+.modal-list li {
+  grid-template-columns: 1.6rem 1fr 10.3rem;
+  height: 2.1rem;
+  flex-shrink: 0;
+}
+
+/* Back arrow button (top right of the pop-up) */
+.modal-back {
+  width: 2.4rem;
+  height: 2.4rem;
+  margin-right: -0.4rem;
+
+  display: grid;
+  place-items: center;
+
+  border: none;
+  border-radius: 50%;
+  background: none;
+  color: #000000;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.2s;
+}
+
+.modal-back svg {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+.modal-back:hover {
+  background: #f0f0f3;
+  transform: translateX(-0.15rem);       /* nudges left, like "go back" */
+}
+
+.modal-back:focus-visible {
+  outline: 0.125rem solid #2563eb;
+  outline-offset: 0.1rem;
+}
+
+/* ---------- Pop-up animation ---------- */
+/* opening: background fades in, box slides up, rows appear one by one */
+.modal-overlay.is-opening {
+  animation: overlayIn 0.25s ease both;
+}
+
+.modal-overlay.is-opening .modal-card {
+  animation: cardIn 0.35s cubic-bezier(0.22, 0.9, 0.3, 1) both;
+}
+
+.modal-overlay.is-opening .modal-list li {
+  animation: rowIn 0.3s ease both;
+  animation-delay: calc(0.12s + var(--i, 0) * 0.025s);
+}
+
+/* closing: the same thing in reverse, a bit faster */
+.modal-overlay.is-closing {
+  animation: overlayOut 0.2s ease both;
+}
+
+.modal-overlay.is-closing .modal-card {
+  animation: cardOut 0.2s ease both;
+}
+
+@keyframes overlayIn  { from { opacity: 0; } to { opacity: 1; } }
+@keyframes overlayOut { from { opacity: 1; } to { opacity: 0; } }
+
+@keyframes cardIn {
+  from { opacity: 0; transform: translateY(2rem) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes cardOut {
+  from { opacity: 1; transform: translateY(0) scale(1); }
+  to   { opacity: 0; transform: translateY(1rem) scale(0.98); }
+}
+
+@keyframes rowIn {
+  from { opacity: 0; transform: translateY(0.6rem); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* people who turned off animations in their system get no movement */
+@media (prefers-reduced-motion: reduce) {
+  .modal-overlay.is-opening,
+  .modal-overlay.is-opening .modal-card,
+  .modal-overlay.is-opening .modal-list li,
+  .modal-overlay.is-closing,
+  .modal-overlay.is-closing .modal-card {
+    animation: none;
+  }
 }

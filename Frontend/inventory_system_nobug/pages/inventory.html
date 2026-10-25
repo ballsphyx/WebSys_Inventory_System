@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Inventory | Inventory System</title>
+  <link rel="icon" type="image/png" href="../images/logo_4k.png" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+
+  <link rel="stylesheet" href="../css/layout.css" />
+  <link rel="stylesheet" href="../css/components.css" />
+  <link rel="stylesheet" href="../css/inventory.css" />
+
+  <!-- Login protection: turn this on once the layout is finished. -->
+  <!-- <script src="../js/guard.js"></script> -->
+</head>
+<body data-page="inventory">
+
+  <div class="app">
+    <header class="topbar" id="topbar"></header>
+    <aside class="sidebar" id="sidebar"></aside>
+
+    <main class="content inv" id="content">
+
+      <div class="toolbar">
+        <div class="tabs" id="tabs">
+          <button type="button" class="tab active" data-filter="all">All</button>
+          <button type="button" class="tab" data-filter="In Stock">In Stock</button>
+          <button type="button" class="tab" data-filter="Low Stock">Low Stock</button>
+          <button type="button" class="tab" data-filter="Out of Stock">Out of Stock</button>
+        </div>
+        <button type="button" class="btn-add" id="addProductBtn">+ Add Product</button>
+      </div>
+
+      <section class="table-card">
+
+        <div class="t-head">
+          <h2>Details</h2>
+          <button type="button" class="btn-filters" id="filtersBtn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+              <path d="M4 7h16M7 12h10M10 17h4" />
+            </svg>
+            Filters
+          </button>
+        </div>
+
+        <div class="cols t-cols">
+          <span>Products</span><span>Product ID</span><span>Price</span>
+          <span>Stock</span><span>Category</span><span>Status</span><span></span>
+        </div>
+
+        <div class="rows" id="rows"></div>
+
+        <div class="pager">
+          <button type="button" class="pg-btn" id="prevBtn">Previous</button>
+          <span class="page-info" id="pageInfo">Page <b>1</b> of <b>1</b></span>
+          <button type="button" class="pg-btn" id="nextBtn">Next</button>
+        </div>
+
+      </section>
+
+    </main>
+  </div>
+
+  <!-- Pop-up: Add Product -->
+  <div class="modal-overlay" id="addModal" hidden aria-hidden="true">
+    <section class="dialog" role="dialog" aria-modal="true" aria-labelledby="addTitle">
+
+      <h2 class="dialog-title" id="addTitle">Add Product</h2>
+      <p class="dialog-sub">Enter the details for the new product below</p>
+
+      <form id="addForm" novalidate>
+
+        <div class="f-row">
+          <label for="pName">Product Name</label>
+          <input type="text" id="pName" name="name" placeholder="Enter product name" autocomplete="off" />
+        </div>
+
+        <div class="f-row">
+          <label for="pCategory">Category</label>
+          <select id="pCategory" name="category">
+            <option value="" selected disabled>Select product category</option>
+            <option value="phone">Phone</option>
+            <option value="laptop">Laptop</option>
+            <option value="tablet">Tablet</option>
+            <option value="accessories">Accessories</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+
+        <div class="f-row">
+          <label for="pPrice">Price</label>
+          <input type="text" id="pPrice" name="price" placeholder="Enter product price" inputmode="decimal" autocomplete="off" />
+        </div>
+
+        <p class="form-error" id="addError" role="alert" hidden></p>
+
+        <div class="dialog-actions">
+          <button type="button" class="btn-discard" id="discardBtn">Discard</button>
+          <button type="submit" class="btn-submit">Add Product</button>
+        </div>
+
+      </form>
+    </section>
+  </div>
+
+  <script src="../js/layout.js"></script>
+  <script src="../js/inventory.js"></script>
+</body>
+</html>
