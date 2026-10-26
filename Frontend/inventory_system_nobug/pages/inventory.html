@@ -107,6 +107,48 @@
     </section>
   </div>
 
+  <!-- Pop-up: Edit Product (same look as Add Product) -->
+  <div class="modal-overlay" id="editModal" hidden aria-hidden="true">
+    <section class="dialog" role="dialog" aria-modal="true" aria-labelledby="editTitle">
+
+      <h2 class="dialog-title" id="editTitle">Edit Product</h2>
+      <p class="dialog-sub">Enter the details for the new product below</p>
+
+      <form id="editForm" novalidate>
+
+        <div class="f-row">
+          <label for="eName">Product Name</label>
+          <input type="text" id="eName" name="name" placeholder="Enter product name" autocomplete="off" />
+        </div>
+
+        <div class="f-row">
+          <label for="eCategory">Category</label>
+          <select id="eCategory" name="category">
+            <option value="" selected disabled>Select product category</option>
+            <option value="phone">Phone</option>
+            <option value="laptop">Laptop</option>
+            <option value="tablet">Tablet</option>
+            <option value="accessories">Accessories</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+
+        <div class="f-row">
+          <label for="ePrice">Price</label>
+          <input type="text" id="ePrice" name="price" placeholder="Enter product price" inputmode="decimal" autocomplete="off" />
+        </div>
+
+        <p class="form-error" id="editError" role="alert" hidden></p>
+
+        <div class="dialog-actions">
+          <button type="button" class="btn-discard" id="editDiscardBtn">Discard</button>
+          <button type="submit" class="btn-submit">Edit Product</button>
+        </div>
+
+      </form>
+    </section>
+  </div>
+
   <script src="../js/layout.js"></script>
   <script src="../js/inventory.js"></script>
 </body>

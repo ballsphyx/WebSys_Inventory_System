@@ -1,4 +1,4 @@
-// ===== Inventory: table, tabs, pagination, Add Product pop-up =====
+// ===== Inventory: table, tabs, pagination, Add + Edit Product pop-ups =====
 // Each product looks like:
 //   { id: "123456", name: "Samsung S26", image: "https://.../s26.jpg", price: 799, stock: 12, category: "phone", status: "In Stock" }
 // "image" and "status" are optional. Status is worked out from stock if it's missing.
@@ -10,8 +10,11 @@ let currentPage = 1;
 /* ------------------------------------------------------------------
    DATA LAYER: the ONLY place the backend needs to connect.
    For now products are kept in this browser's localStorage so you can
-   test the pop-up. When the backend is ready, replace these two
-   functions with calls to the server (GET all products, POST a new one).
+   test the pop-ups. When the backend is ready, replace these three
+   functions with calls to the server:
+     getProducts()          -> GET all products
+     addProduct(data)       -> POST a new product
+     updateProduct(id, data)-> PUT/PATCH an existing product
 ------------------------------------------------------------------ */
 const STORE_KEY = "inventory_products";
 
@@ -21,6 +24,10 @@ function getProducts() {
   } catch (e) {
     return [];
   }
+}
+
+function saveProducts(list) {
+  try { localStorage.setItem(STORE_KEY, JSON.stringify(list)); } catch (e) {}
 }
 
 function addProduct(data) {
@@ -42,7 +49,21 @@ function addProduct(data) {
   };
 
   list.push(product);
-  try { localStorage.setItem(STORE_KEY, JSON.stringify(list)); } catch (e) {}
+  saveProducts(list);
+  return product;
+}
+
+function updateProduct(id, data) {
+  const list = getProducts();
+  const product = list.find(function (p) { return p.id === id; });
+  if (!product) return null;
+
+  // only the fields in the Edit form change; id, stock and image stay as they are
+  product.name = data.name;
+  product.category = data.category;
+  product.price = data.price;
+
+  saveProducts(list);
   return product;
 }
 
@@ -142,36 +163,16 @@ function showTab(filter) {
   });
 }
 
-/* ------------------------- Add Product pop-up ------------------------- */
-function setupAddModal() {
-  const modal = document.getElementById("addModal");
-  const form = document.getElementById("addForm");
-  const openBtn = document.getElementById("addProductBtn");
-  const discardBtn = document.getElementById("discardBtn");
-  const nameInput = document.getElementById("pName");
-  const categoryInput = document.getElementById("pCategory");
-  const priceInput = document.getElementById("pPrice");
-  const errorBox = document.getElementById("addError");
+/* ---------------- Shared helpers for both pop-ups ---------------- */
 
+// Opens/closes a pop-up with the fade + slide animation.
+// Discard is the ONLY way to leave without saving (like the dashboard pop-up).
+function createModal(modal, firstField, onClosed) {
   const CLOSE_MS = 200;          // must match the closing animation time in components.css
-  let closeTimer = null;
+  let timer = null;
 
-  function clearErrors() {
-    errorBox.hidden = true;
-    errorBox.textContent = "";
-    [nameInput, categoryInput, priceInput].forEach(function (el) { el.classList.remove("has-error"); });
-  }
-
-  function fail(message, field) {
-    errorBox.textContent = message;
-    errorBox.hidden = false;
-    field.classList.add("has-error");
-    field.focus();
-  }
-
-  function openModal() {
-    clearTimeout(closeTimer);
-    clearErrors();
+  function open() {
+    clearTimeout(timer);
     modal.classList.remove("is-closing");
     modal.hidden = false;
     modal.setAttribute("aria-hidden", "false");
@@ -181,52 +182,174 @@ function setupAddModal() {
     void modal.offsetWidth;
     modal.classList.add("is-opening");
 
-    nameInput.focus();
+    firstField.focus();
   }
 
-  // Discard is the ONLY way to leave without adding (like the dashboard pop-up).
-  function closeModal() {
+  function close() {
     if (modal.hidden || modal.classList.contains("is-closing")) return;
 
     modal.classList.remove("is-opening");
     modal.classList.add("is-closing");
 
-    closeTimer = setTimeout(function () {
+    timer = setTimeout(function () {
       modal.hidden = true;
       modal.setAttribute("aria-hidden", "true");
       modal.classList.remove("is-closing");
-      form.reset();
-      clearErrors();
-      openBtn.focus();
+      if (onClosed) onClosed();
     }, CLOSE_MS);
   }
 
-  form.addEventListener("submit", function (e) {
-    e.preventDefault();
+  return { open: open, close: close };
+}
+
+// Reads + checks the Name / Category / Price fields of a form.
+// Returns { name, category, price } or null (after showing the red message).
+function createProductForm(els) {
+  function clearErrors() {
+    els.error.hidden = true;
+    els.error.textContent = "";
+    [els.name, els.category, els.price].forEach(function (el) { el.classList.remove("has-error"); });
+  }
+
+  function fail(message, field) {
+    els.error.textContent = message;
+    els.error.hidden = false;
+    field.classList.add("has-error");
+    field.focus();
+    return null;
+  }
+
+  function read() {
     clearErrors();
 
-    const name = nameInput.value.trim();
-    const category = categoryInput.value;
-    const priceText = priceInput.value.trim().replace(/,/g, "");
+    const name = els.name.value.trim();
+    const category = els.category.value;
+    const priceText = els.price.value.trim().replace(/,/g, "");
     const price = Number(priceText);
 
-    if (!name) return fail("Please enter the product name.", nameInput);
-    if (!category) return fail("Please select a category.", categoryInput);
+    if (!name) return fail("Please enter the product name.", els.name);
+    if (!category) return fail("Please select a category.", els.category);
     if (priceText === "" || !isFinite(price) || price < 0) {
-      return fail("Please enter a valid price, like 799 or 49.99.", priceInput);
+      return fail("Please enter a valid price, like 799 or 49.99.", els.price);
     }
+    return { name: name, category: category, price: price };
+  }
 
-    addProduct({ name: name, category: category, price: price });
+  return { clearErrors: clearErrors, read: read };
+}
+
+/* ------------------------- Add Product pop-up ------------------------- */
+function setupAddModal() {
+  const form = document.getElementById("addForm");
+  const openBtn = document.getElementById("addProductBtn");
+
+  const fields = createProductForm({
+    name: document.getElementById("pName"),
+    category: document.getElementById("pCategory"),
+    price: document.getElementById("pPrice"),
+    error: document.getElementById("addError")
+  });
+
+  const modal = createModal(document.getElementById("addModal"), document.getElementById("pName"), function () {
+    form.reset();
+    fields.clearErrors();
+    openBtn.focus();
+  });
+
+  form.addEventListener("submit", function (e) {
+    e.preventDefault();
+    const data = fields.read();
+    if (!data) return;
+
+    addProduct(data);
 
     // jump to the last page of "All" so the new product is visible
     showTab("all");
     currentPage = Number.MAX_SAFE_INTEGER;   // render() trims this to the last page
     render();
-    closeModal();
+    modal.close();
   });
 
-  openBtn.addEventListener("click", openModal);
-  discardBtn.addEventListener("click", closeModal);
+  openBtn.addEventListener("click", function () {
+    fields.clearErrors();
+    modal.open();
+  });
+  document.getElementById("discardBtn").addEventListener("click", modal.close);
+}
+
+/* ------------------------- Edit Product pop-up ------------------------- */
+function setupEditModal() {
+  const form = document.getElementById("editForm");
+  const nameInput = document.getElementById("eName");
+  const categoryInput = document.getElementById("eCategory");
+  const priceInput = document.getElementById("ePrice");
+  let editingId = null;
+
+  const fields = createProductForm({
+    name: nameInput,
+    category: categoryInput,
+    price: priceInput,
+    error: document.getElementById("editError")
+  });
+
+  const modal = createModal(document.getElementById("editModal"), nameInput, function () {
+    form.reset();
+    fields.clearErrors();
+
+    // hand focus back to the pencil that opened it
+    const pencil = document.querySelector('.edit-btn[data-id="' + editingId + '"]');
+    if (pencil) pencil.focus();
+    editingId = null;
+  });
+
+  function openFor(id) {
+    const product = getProducts().find(function (p) { return p.id === id; });
+    if (!product) return;
+
+    editingId = id;
+    fields.clearErrors();
+
+    nameInput.value = product.name || "";
+    priceInput.value = product.price != null ? String(product.price) : "";
+
+    // pick the product's category; if it isn't in the list yet, add it so nothing is lost
+    const wanted = String(product.category || "");
+    const match = Array.from(categoryInput.options).find(function (o) {
+      return o.value.toLowerCase() === wanted.toLowerCase();
+    });
+    if (match) {
+      categoryInput.value = match.value;
+    } else if (wanted) {
+      const extra = document.createElement("option");
+      extra.value = wanted;
+      extra.textContent = wanted;
+      categoryInput.appendChild(extra);
+      categoryInput.value = wanted;
+    } else {
+      categoryInput.value = "";
+    }
+
+    modal.open();
+  }
+
+  form.addEventListener("submit", function (e) {
+    e.preventDefault();
+    const data = fields.read();
+    if (!data) return;
+
+    updateProduct(editingId, data);
+    render();            // stays on the same page and tab, the row updates in place
+    modal.close();
+  });
+
+  document.getElementById("editDiscardBtn").addEventListener("click", modal.close);
+
+  // one listener for every pencil (rows are rebuilt on each render)
+  document.getElementById("rows").addEventListener("click", function (e) {
+    const btn = e.target.closest(".edit-btn");
+    if (!btn || !btn.dataset.id) return;     // empty placeholder rows have no product
+    openFor(btn.dataset.id);
+  });
 }
 
 /* ------------------------------ Start ------------------------------ */
@@ -243,7 +366,8 @@ document.addEventListener("DOMContentLoaded", function () {
   document.getElementById("nextBtn").addEventListener("click", function () { currentPage++; render(); });
 
   setupAddModal();
+  setupEditModal();
 
-  // Edit pencils and Filters get their pop-ups in the next steps.
+  // Filters gets its pop-up in the next step.
   render();
 });
