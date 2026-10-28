@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Transactions | Inventory System</title>
+  <link rel="icon" type="image/png" href="../images/logo_4k.png" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+
+  <link rel="stylesheet" href="../css/layout.css" />
+  <link rel="stylesheet" href="../css/components.css" />
+  <link rel="stylesheet" href="../css/transactions.css" />
+
+  <!-- Login protection: turn this on once the layout is finished. -->
+  <!-- <script src="../js/guard.js"></script> -->
+</head>
+<body data-page="transactions">
+
+  <div class="app">
+    <header class="topbar" id="topbar"></header>
+    <aside class="sidebar" id="sidebar"></aside>
+
+    <main class="content tx" id="content">
+
+      <div class="toolbar">
+        <div class="tabs" id="tabs">
+          <button type="button" class="tab active" data-filter="all">All</button>
+          <button type="button" class="tab" data-filter="In Stock">In Stock</button>
+          <button type="button" class="tab" data-filter="Low Stock">Low Stock</button>
+          <button type="button" class="tab" data-filter="Out of Stock">Out of Stock</button>
+        </div>
+        <button type="button" class="btn-add" id="addTransactionBtn">+ Add Transaction</button>
+      </div>
+
+      <section class="table-card">
+
+        <div class="t-head">
+          <h2>Details</h2>
+          <button type="button" class="btn-filters" id="filtersBtn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+              <path d="M4 7h16M7 12h10M10 17h4" />
+            </svg>
+            Filters
+          </button>
+        </div>
+
+        <div class="cols t-cols">
+          <span>Transaction ID</span><span>Date</span><span>Product</span><span>Category</span>
+          <span>Quantity</span><span>Type</span><span>Status</span><span></span>
+        </div>
+
+        <div class="rows" id="rows"></div>
+
+        <div class="pager">
+          <button type="button" class="pg-btn" id="prevBtn">Previous</button>
+          <span class="page-info" id="pageInfo">Page <b>1</b> of <b>1</b></span>
+          <button type="button" class="pg-btn" id="nextBtn">Next</button>
+        </div>
+
+      </section>
+
+    </main>
+  </div>
+
+  <!-- Pop-up: Add Transaction -->
+  <div class="modal-overlay" id="addModal" hidden aria-hidden="true">
+    <section class="dialog" role="dialog" aria-modal="true" aria-labelledby="addTitle">
+
+      <h2 class="dialog-title" id="addTitle">Add Transaction</h2>
+      <p class="dialog-sub">Enter the details for the new transaction below</p>
+
+      <form id="addForm" novalidate>
+
+        <div class="type-row" role="radiogroup" aria-label="Type">
+          <span class="type-label">Type:</span>
+          <div class="type-opts">
+            <label class="opt"><span>In</span><input type="radio" name="type" value="In" checked /></label>
+            <label class="opt"><span>Out</span><input type="radio" name="type" value="Out" /></label>
+            <label class="opt"><span>Adjustment</span><input type="radio" name="type" value="Adjustment" /></label>
+          </div>
+        </div>
+
+        <div class="f-row">
+          <label for="tName">Product Name</label>
+          <input type="text" id="tName" name="name" list="productList" placeholder="Enter product name" autocomplete="off" />
+          <datalist id="productList"></datalist>
+        </div>
+
+        <div class="f-row">
+          <label for="tCategory">Category</label>
+          <select id="tCategory" name="category">
+            <option value="" selected disabled>Select product category</option>
+            <option value="phone">Phone</option>
+            <option value="laptop">Laptop</option>
+            <option value="tablet">Tablet</option>
+            <option value="accessories">Accessories</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+
+        <div class="f-row">
+          <label for="tPrice">Price</label>
+          <input type="text" id="tPrice" name="price" placeholder="Enter product price" inputmode="decimal" autocomplete="off" />
+        </div>
+
+        <div class="f-row last">
+          <label for="tQty">Quantity</label>
+          <input type="text" id="tQty" name="quantity" placeholder="Enter quantity" inputmode="numeric" autocomplete="off" />
+        </div>
+
+        <p class="form-error" id="addError" role="alert"></p>
+
+        <div class="dialog-actions">
+          <button type="button" class="btn-discard" id="discardBtn">Discard</button>
+          <button type="submit" class="btn-submit">Add Transaction</button>
+        </div>
+
+      </form>
+    </section>
+  </div>
+
+  <script src="../js/layout.js"></script>
+  <script src="../js/transactions.js"></script>
+</body>
+</html>
