@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Reports | Inventory System</title>
+  <link rel="icon" type="image/png" href="../images/logo_4k.png" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+  <link rel="stylesheet" href="../css/layout.css" />
+  <link rel="stylesheet" href="../css/reports.css" />
+
+  <!-- Login protection: turn this on once the layout is finished. -->
+  <!-- <script src="../js/guard.js"></script> -->
+</head>
+<body data-page="reports">
+
+  <div class="app">
+    <header class="topbar" id="topbar"></header>
+    <aside class="sidebar" id="sidebar"></aside>
+
+    <main class="content rp" id="content">
+
+      <!-- Report tabs -->
+      <nav class="rp-tabs" id="rpTabs" aria-label="Report types">
+        <button type="button" class="rtab active" data-report="daily">Daily Sales</button>
+        <button type="button" class="rtab" data-report="weekly">Weekly Sales</button>
+        <button type="button" class="rtab" data-report="monthly">Monthly Sales</button>
+        <button type="button" class="rtab" data-report="product">Sales by Product</button>
+        <button type="button" class="rtab" data-report="category">Sales by Category</button>
+        <button type="button" class="rtab" data-report="top">Top-Selling</button>
+        <button type="button" class="rtab" data-report="revenue">Sales Revenue</button>
+        <button type="button" class="rtab" data-report="movement">Inventory Movement</button>
+      </nav>
+
+      <!-- Summary cards (every tab except Sales Revenue) -->
+      <section class="rp-stats">
+        <div class="rstat"><small>Total Revenue</small><b id="sRevenue">$0</b><span class="chg" id="cRevenue"></span></div>
+        <div class="rstat"><small>Total Orders</small><b id="sOrders">0</b><span class="chg" id="cOrders"></span></div>
+        <div class="rstat"><small>Items Sold</small><b id="sItems">0</b><span class="chg" id="cItems"></span></div>
+        <div class="rstat"><small>Avg Order Value</small><b id="sAvg">$0</b><span class="chg" id="cAvg"></span></div>
+      </section>
+
+      <!-- Charts (Sales Revenue tab only) -->
+      <section class="rp-charts">
+
+        <div class="rcard">
+          <h3>Monthly Revenue</h3>
+          <div class="bars-chart" id="monthBars"></div>
+        </div>
+
+        <div class="rcard">
+          <h3>Revenue by Category</h3>
+          <div class="donut-wrap">
+            <div class="rdonut" id="revDonut"></div>
+            <ul class="rlegend" id="revLegend"></ul>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- Movement filter pills (Inventory Movement tab only) -->
+      <nav class="rp-pills" id="rpPills" aria-label="Movement types">
+        <button type="button" class="mpill active" data-move="all" aria-pressed="true">All</button>
+        <button type="button" class="mpill" data-move="Stock In" aria-pressed="false">Stock In</button>
+        <button type="button" class="mpill" data-move="Stock Out" aria-pressed="false">Stock Out</button>
+        <button type="button" class="mpill" data-move="Sale" aria-pressed="false">Sale</button>
+        <button type="button" class="mpill" data-move="Purchase" aria-pressed="false">Purchase</button>
+        <button type="button" class="mpill" data-move="Return" aria-pressed="false">Return</button>
+        <button type="button" class="mpill" data-move="Adjustment" aria-pressed="false">Adjustment</button>
+        <button type="button" class="mpill" data-move="Damaged/Lost" aria-pressed="false">Damaged/Lost</button>
+      </nav>
+
+      <!-- Report table -->
+      <section class="table-card">
+
+        <div class="t-head">
+          <h2 id="reportTitle">Daily Sales Report</h2>
+          <button type="button" class="btn-filters" id="filtersBtn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+              <path d="M4 7h16M7 12h10M10 17h4" />
+            </svg>
+            Filters
+          </button>
+        </div>
+
+        <div class="cols t-cols"></div>
+
+        <div class="rows" id="rows"></div>
+
+        <div class="pager">
+          <button type="button" class="pg-btn" id="prevBtn">Previous</button>
+          <span class="page-info" id="pageInfo">Page <b>1</b> of <b>1</b></span>
+          <button type="button" class="pg-btn" id="nextBtn">Next</button>
+        </div>
+
+      </section>
+
+    </main>
+  </div>
+
+  <script src="../js/layout.js"></script>
+  <script src="../js/reports.js"></script>
+</body>
+</html>

@@ -1,0 +1,384 @@
+/* Reports page only. The top bar and sidebar come from layout.css.
+   Normal tabs:        gap, tabs, gap, summary cards, gap, table card, gap
+   Sales Revenue:      gap, tabs, gap, two chart cards, gap, table card, gap
+   Inventory Movement: gap, tabs, gap, summary cards, gap, filter pills, gap, table card, gap
+   The tab row and the table card keep the same left edge and width on every tab. */
+
+.content.rp {
+  background: #eeeeee;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: 8fr 17fr 22fr 51fr 9fr 306fr 17fr;
+}
+
+/* Sales Revenue tab: charts replace the summary cards */
+.content.rp.mode-charts {
+  grid-template-rows: 8fr 17fr 8fr 149fr 6fr 234fr 8fr;
+}
+.content.rp.mode-charts .rp-stats { display: none; }
+.content.rp.mode-charts .rp-charts { display: grid; }
+
+/* Inventory Movement tab: a row of filter pills sits between the cards and the table */
+.content.rp.mode-movement {
+  grid-template-rows: 8fr 17fr 10fr 51fr 16fr 18fr 2fr 301fr 6fr;
+}
+.content.rp.mode-movement .rp-pills { display: flex; }
+.content.rp.mode-movement .table-card { grid-row: 8; }
+
+/* ---------- Report tabs ---------- */
+.rp-tabs {
+  grid-row: 2;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding-left: 2.25%;
+  overflow-x: auto;                 /* like your design, the row scrolls if all tabs don't fit */
+  overflow-y: hidden;
+  scrollbar-width: none;
+}
+.rp-tabs::-webkit-scrollbar { display: none; }
+
+.rtab {
+  flex: 0 0 auto;
+  height: 82%;
+  padding: 0 1.6rem;
+  border: 0.1rem solid #bdbdbd;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #222222;
+  font-family: inherit;
+  font-size: 1.2rem;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.rtab:hover { background: #f3f3f3; }
+.rtab.active {
+  height: 100%;
+  padding: 0 2.4rem;
+  background: #1b3f31;
+  border-color: #1b3f31;
+  color: #ffffff;
+  font-weight: 500;
+}
+
+/* ---------- Summary cards ---------- */
+.rp-stats {
+  grid-row: 4;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 13fr 118fr 14fr 121fr 14fr 120fr 18fr 115fr 44fr;
+}
+.rp-stats .rstat:nth-child(1) { grid-column: 2; }
+.rp-stats .rstat:nth-child(2) { grid-column: 4; }
+.rp-stats .rstat:nth-child(3) { grid-column: 6; }
+.rp-stats .rstat:nth-child(4) { grid-column: 8; }
+
+.rstat {
+  min-width: 0;
+  padding-left: 1.85rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  background: #ffffff;
+  border: 0.1rem solid #e6e6e6;
+  border-radius: 0.9rem;
+  box-shadow: 0 0.1rem 0.3rem rgba(0, 0, 0, 0.05);
+}
+.rstat small { font-size: 1rem; line-height: 1.5rem; color: #888888; }
+.rstat b { font-size: 2.3rem; font-weight: 700; line-height: 1.25; color: #111111; white-space: nowrap; }
+.chg { min-height: 1.3rem; font-size: 0.95rem; line-height: 1.3rem; white-space: nowrap; }
+.chg.up   { color: #16a34a; }
+.chg.down { color: #ef4444; }
+
+/* ---------- Movement filter pills (Inventory Movement tab) ---------- */
+.rp-pills {
+  display: none;
+  grid-row: 6;
+  min-width: 0;
+  align-items: center;
+  gap: 1.6rem;
+  padding-left: 2.25%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+}
+.rp-pills::-webkit-scrollbar { display: none; }
+
+.mpill {
+  flex: 0 0 auto;
+  height: 82%;
+  padding: 0 1.4rem;
+  border: 0.1rem solid #bdbdbd;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #222222;
+  font-family: inherit;
+  font-size: 1.2rem;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.mpill:hover { background: #f3f3f3; }
+.mpill.active {
+  height: 100%;
+  padding: 0 1.6rem;
+  background: #1b3f31;
+  border-color: #1b3f31;
+  color: #ffffff;
+  font-size: 1.35rem;
+  font-weight: 500;
+}
+.mpill:focus-visible { outline: 0.125rem solid #2563eb; outline-offset: 0.15rem; }
+
+/* ---------- Chart cards (Sales Revenue tab) ---------- */
+/* same left edge and total width as the table card below them */
+.rp-charts {
+  display: none;
+  grid-row: 4;
+  min-height: 0;
+  grid-template-columns: 5.03fr 41.36fr 4.27fr 44.33fr 5.01fr;
+}
+.rp-charts > :nth-child(1) { grid-column: 2; }
+.rp-charts > :nth-child(2) { grid-column: 4; }
+
+.rcard {
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  padding: 1.5rem 1.6rem 1.2rem;
+  background: #ffffff;
+  border-radius: 1.1rem;
+  box-shadow: 0 0.1rem 0.4rem rgba(0, 0, 0, 0.05);
+}
+.rcard h3 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  line-height: 1.6rem;
+  color: #111111;
+}
+
+/* Monthly Revenue bars */
+.bars-chart {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  margin-top: 0.4rem;
+  padding: 0 0.6rem;
+}
+.bcol {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.bar-track {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  border-bottom: 0.1rem solid #e4e4e4;
+}
+.bar {
+  position: absolute;
+  left: 22%;
+  width: 56%;
+  bottom: 0;
+  background: #41946f;
+  border-radius: 0.35rem 0.35rem 0 0;
+}
+.bar em {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-bottom: 0.35rem;
+  font-style: normal;
+  font-size: 0.9rem;
+  color: #666666;
+  white-space: nowrap;
+}
+.bcol > span {
+  padding-top: 0.5rem;
+  font-size: 0.95rem;
+  color: #777777;
+}
+
+/* Revenue by Category donut */
+.donut-wrap {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  padding-left: 16%;
+  gap: 12%;
+}
+.rdonut {
+  position: relative;
+  flex: none;
+  height: 74%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+}
+.rdonut::after {
+  content: "";
+  position: absolute;
+  inset: 22%;
+  background: #ffffff;
+  border-radius: 50%;
+}
+.rlegend {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 1.15rem;
+}
+.rlegend li { display: flex; align-items: flex-start; gap: 0.7rem; }
+.rlegend i {
+  flex: none;
+  width: 0.7rem;
+  height: 0.7rem;
+  margin-top: 0.35rem;
+  border-radius: 50%;
+}
+.rlegend span { display: block; min-height: 1.2rem; font-size: 1rem; line-height: 1.2rem; color: #222222; }
+.rlegend small { display: block; min-height: 1.1rem; font-size: 0.9rem; line-height: 1.1rem; color: #888888; }
+
+/* ---------- Table card ---------- */
+.table-card {
+  grid-row: 6;
+  justify-self: start;
+  width: 89.95%;
+  margin-left: 5.03%;
+  min-height: 0;
+  overflow: hidden;
+  display: grid;
+  grid-template-rows: 32fr 22fr 225fr 27fr;
+  background: #ffffff;
+  border-radius: 1.1rem;
+  box-shadow: 0 0.1rem 0.4rem rgba(0, 0, 0, 0.05);
+}
+.content.rp.mode-charts .table-card {
+  grid-template-rows: 47fr 32fr 227fr 29fr;
+}
+
+.t-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 0 3.5rem 0 1.5rem;
+}
+.t-head h2 {
+  padding-top: 1.3rem;
+  font-size: 1.65rem;
+  font-weight: 500;
+  line-height: 2rem;
+  color: #333333;
+}
+
+.btn-filters {
+  margin-top: 1.5rem;
+  height: 3.3rem;
+  padding: 0 1.3rem;
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  border: 0.1rem solid #d9d9d9;
+  border-radius: 0.5rem;
+  background: #ffffff;
+  font-family: inherit;
+  font-size: 1.2rem;
+  color: #333333;
+  cursor: pointer;
+}
+.btn-filters svg { width: 1.4rem; height: 1.4rem; }
+.btn-filters:hover { background: #f6f6f6; }
+
+/* header row and every row share these columns:
+   first, second, third, Revenue/Items, Status, pencil */
+.cols {
+  display: grid;
+  grid-template-columns: 94fr 81fr 95fr 98fr 115fr 28fr;
+  align-items: center;
+  padding-left: 1.5rem;
+}
+
+.t-cols {
+  font-size: 1.1rem;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: #666666;
+  border-bottom: 0.1rem solid #e6e6e6;
+}
+
+.rows {
+  min-height: 0;
+  display: grid;
+  grid-template-rows: repeat(var(--n, 10), 1fr);   /* 10 rows per page, 7 on Sales Revenue */
+}
+
+.rows .cols {
+  border-bottom: 0.1rem solid #ececec;
+  font-size: 1.2rem;
+  color: #222222;
+}
+.rows .cols > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.st-done    { color: #16a34a; }
+.st-pending { color: #f59e0b; }
+.st-cancel  { color: #ef4444; }
+
+/* movement badges + quantity colours */
+.badge {
+  display: inline-block;
+  padding: 0.3rem 1.1rem;
+  border-radius: 999px;
+  font-size: 0.95rem;
+  line-height: 1.3;
+}
+.mv-in   { background: #d9f2e0; color: #1c6b3a; }     /* Stock In, Purchase, Return */
+.mv-out  { background: #fcd9d9; color: #c0302f; }     /* Stock Out, Damaged/Lost */
+.mv-sale { background: #dbe7fb; color: #2a58b5; }     /* Sale */
+.mv-adj  { background: #fdf0c2; color: #8a6a00; }     /* Adjustment */
+
+.q-up   { color: #16a34a; font-weight: 600; }
+.q-down { color: #ef4444; font-weight: 600; }
+.q-adj  { color: #b7791f; font-weight: 600; }
+
+.edit-btn {
+  width: 1.5rem; height: 1.5rem; padding: 0;
+  border: none; background: none; color: #000000; cursor: pointer;
+}
+.edit-btn svg { display: block; width: 100%; height: 100%; }
+.edit-btn:hover { color: #2a5c47; }
+
+/* ---------- Pagination ---------- */
+.pager {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  padding: 0 9.6% 0 5.4%;
+}
+
+.pg-btn {
+  height: 3.2rem;
+  padding: 0 1.4rem;
+  border: 0.1rem solid #d9d9d9;
+  border-radius: 0.4rem;
+  background: #ffffff;
+  font-family: inherit;
+  font-size: 1.15rem;
+  color: #333333;
+  cursor: pointer;
+}
+.pg-btn:hover:not(:disabled) { background: #f6f6f6; }
+.pg-btn:disabled { opacity: 0.45; cursor: default; }
+
+.page-info {
+  text-align: center;
+  font-size: 1.1rem;
+  color: #333333;
+}
+.page-info b { font-weight: 600; }
