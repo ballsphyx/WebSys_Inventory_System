@@ -1,10 +1,12 @@
-// ===== Reports: tabs, summary cards, charts, movement pills, table =====
+// ===== Reports: tabs, summary cards, charts, movement pills, filters, table =====
 // All eight report tabs are built: Daily, Weekly, Monthly, Sales by Product, Sales by Category,
 // Top-Selling, Sales Revenue and Inventory Movement.
+// Reports are read-only: they are calculated from your transactions and inventory, so rows have no edit button.
 
 let reportKind = "daily";
 let reportPage = 1;
 let moveFilter = "all";          // the pill picked on the Inventory Movement tab
+let reportFilters = {};          // what was chosen in the Filters pop-up, kept per tab: { daily: { from: "2026-10-01" }, ... }
 
 /* ------------------------------------------------------------------
    DATA LAYER: the ONLY place the backend needs to connect.
@@ -19,17 +21,23 @@ let moveFilter = "all";          // the pill picked on the Inventory Movement ta
      totalRows: number   // only for "movement": how many movements exist before the pill filter
    }
    What a row holds depends on the report:
-     daily / weekly / monthly : { first: "Oct 28, 2026" (or "Week of ..." / "October 2026"), second: number of orders,
+     daily / weekly / monthly : { key: "2026-10-28" (the day, the Monday of the week, or the 1st of the month),
+                                  first: "Oct 28, 2026" (or "Week of ..." / "October 2026"), second: number of orders,
                                   items, revenue, status }
      product                  : { first: product name, second: category, items, revenue, status }
-     category                 : { first: category name, second: number of products in it, items, revenue, status }
+     category                 : { key: "phone" (lowercase category), first: category name,
+                                  second: number of products in it, items, revenue, status }
      top                      : { first: product name, second: category, items, revenue }
                                 (already sorted, most items sold first; the page numbers them 1, 2, 3 ...)
      revenue                  : same as daily (one row per day), status = "Received"
-     movement                 : { first: "Oct 28", second: product name, movement, change, user }
+     movement                 : { key: "2026-10-28", first: "Oct 28", second: product name, movement, change, user }
                                 movement = "Stock In" | "Stock Out" | "Sale" | "Purchase" | "Return" | "Adjustment" | "Damaged/Lost"
                                 change   = how much the stock went up (+) or down (-), e.g. 20 or -5
                                 (newest first; the page filters by the pill that is clicked)
+   FILTERS: the Filters pop-up fills reportFilters[kind] and applyFilters() (below) narrows the rows in the browser.
+   With a backend, send the same object to the server instead, for example
+   GET /reports/daily?from=2026-10-01&to=2026-10-31&minRevenue=500
+   and the server sends back only the matching rows.
    For now it is worked out in the browser from the Transactions page's saved list
    and the Inventory page's saved list:
    every "Out" transaction counts as a sale (orders = how many, items = quantity, revenue = price x quantity).
@@ -260,6 +268,7 @@ function buildMovements() {
 
     const d = parseISO(t.date);
     return {
+      key: t.date,
       first: MONTHS[d.getMonth()] + " " + d.getDate(),
       second: t.product,
       movement: move,
@@ -316,6 +325,7 @@ function percentChange(now, before) {
 
 // The four summary cards are the same on every report tab that shows them.
 // Totals come from every sale; the change compares the newest day/week/month with the one before it.
+// (The Filters pop-up only narrows the table, the cards always show the whole picture.)
 function buildStats(periodRows) {
   const total = periodRows.reduce(function (s, r) {
     s.revenue += r.revenue; s.orders += r.orders; s.items += r.items;
@@ -373,6 +383,62 @@ function getReport(kind) {
   return { stats: stats, rows: rows };
 }
 
+/* ------------------------------ Filters ------------------------------ */
+// first and last day a row covers (a week = 7 days from its Monday, a month = the whole month)
+function periodSpan(kind, key) {
+  const d = parseISO(key);
+  if (kind === "weekly") return [key, toISO(new Date(d.getFullYear(), d.getMonth(), d.getDate() + 6))];
+  if (kind === "monthly") return [key, toISO(new Date(d.getFullYear(), d.getMonth() + 1, 0))];
+  return [key, key];
+}
+
+function applyFilters(kind, rows) {
+  const cfg = KINDS[kind];
+  const f = reportFilters[kind] || {};
+  let out = rows;
+
+  if (cfg.type === "period" || cfg.type === "revenue") {
+    out = out.filter(function (r) {
+      const span = periodSpan(kind, r.key);
+      if (f.from && span[1] < f.from) return false;                 // period ends before the start date
+      if (f.to && span[0] > f.to) return false;                     // period starts after the end date
+      if (f.minRevenue != null && r.revenue < Number(f.minRevenue)) return false;
+      return true;
+    });
+  } else if (cfg.type === "product") {
+    out = out.filter(function (r) {
+      if (f.category && String(r.second).trim().toLowerCase() !== f.category) return false;
+      if (f.status && r.status !== f.status) return false;
+      return true;
+    });
+  } else if (cfg.type === "category") {
+    out = out.filter(function (r) { return !f.category || r.key === f.category; });
+  } else if (cfg.type === "top") {
+    out = out.filter(function (r) { return !f.category || String(r.second).trim().toLowerCase() === f.category; });
+    if (f.limit) out = out.slice(0, Number(f.limit));
+  } else if (cfg.type === "movement") {
+    out = out.filter(function (r) {
+      if (f.from && r.key < f.from) return false;
+      if (f.to && r.key > f.to) return false;
+      if (f.product && String(r.second).toLowerCase().indexOf(f.product.trim().toLowerCase()) === -1) return false;
+      if (f.user && r.user !== f.user) return false;
+      return true;
+    });
+  }
+  return out;
+}
+
+// the Filters button shows how many filters are on for the tab you are looking at
+function updateFiltersButton() {
+  const f = reportFilters[reportKind] || {};
+  const count = Object.keys(f).filter(function (k) { return f[k] !== "" && f[k] != null; }).length;
+  const btn = document.getElementById("filtersBtn");
+  const badge = document.getElementById("fCount");
+  btn.classList.toggle("on", count > 0);
+  badge.hidden = count === 0;
+  badge.textContent = count;
+}
+
 /* ------------------------------ Display ------------------------------ */
 function money(v) {
   return "$" + Math.round(v).toLocaleString("en-US");
@@ -396,8 +462,6 @@ function showChange(id, value) {
   el.classList.add(up ? "up" : "down");
   el.textContent = (up ? "↑ " : "↓ ") + Math.abs(value).toFixed(1) + "%";
 }
-
-const PENCIL = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 17.25V21h3.75L17.8 9.95l-3.75-3.75L3 17.25zm17.7-10.2a1 1 0 000-1.4l-2.35-2.35a1 1 0 00-1.4 0l-1.85 1.85 3.75 3.75 1.85-1.85z"/></svg>';
 
 // "Active" and "Received" have no color on purpose: your Figma shows them in plain dark text
 const STATUS_CLASS = {
@@ -443,18 +507,7 @@ function quantityCell(change, move) {
   return cell(sign + Math.abs(change).toLocaleString("en-US"), cls);
 }
 
-function pencilCell() {
-  const s = document.createElement("span");
-  const b = document.createElement("button");
-  b.type = "button";
-  b.className = "edit-btn";
-  b.setAttribute("aria-label", "Edit row");
-  b.innerHTML = PENCIL;
-  s.appendChild(b);
-  return s;
-}
-
-// the five cells before the pencil, for one row of data
+// the five cells of one row of data (the empty sixth column keeps the layout identical)
 function dataCells(cfg, r, rank) {
   const num = function (v) { return typeof v === "number" ? v.toLocaleString("en-US") : v; };
 
@@ -567,7 +620,7 @@ function renderReport() {
   const head = document.querySelector(".t-cols");
   head.innerHTML = "";
   cfg.cols.forEach(function (name) { head.appendChild(cell(name)); });
-  head.appendChild(cell(""));                       // the pencil column
+  head.appendChild(cell(""));                       // empty last column: keeps every column where it was
 
   // summary cards
   const s = report.stats;
@@ -580,18 +633,15 @@ function renderReport() {
   showChange("cItems", s.changes.items);
   showChange("cAvg", s.changes.avg);
 
-  // table
-  const rowsData = report.rows;
+  // table (narrowed by the Filters pop-up)
+  const rowsData = applyFilters(reportKind, report.rows);
+  updateFiltersButton();
+
   const pages = Math.max(1, Math.ceil(rowsData.length / size));
   reportPage = Math.min(Math.max(reportPage, 1), pages);
 
   const start = (reportPage - 1) * size;
   const slice = rowsData.slice(start, start + size);
-
-  // blank rows only get pencils when there is no data at all, like your design
-  // (a pill with no matches is not "no data")
-  const total = report.totalRows != null ? report.totalRows : rowsData.length;
-  const placeholders = total === 0;
 
   const rows = document.getElementById("rows");
   rows.style.setProperty("--n", size);
@@ -604,9 +654,9 @@ function renderReport() {
 
     if (r) {
       dataCells(cfg, r, start + i + 1).forEach(function (c) { row.appendChild(c); });
-      row.appendChild(pencilCell());
+      row.appendChild(cell(""));                    // empty last column (no edit button on reports)
     } else {
-      row.append(cell(""), cell(""), cell(""), cell(""), cell(""), placeholders ? pencilCell() : cell(""));
+      row.append(cell(""), cell(""), cell(""), cell(""), cell(""), cell(""));
     }
     rows.appendChild(row);
   }
@@ -649,6 +699,6 @@ document.addEventListener("DOMContentLoaded", function () {
   document.getElementById("prevBtn").addEventListener("click", function () { reportPage--; renderReport(); });
   document.getElementById("nextBtn").addEventListener("click", function () { reportPage++; renderReport(); });
 
-  // Filters and the row pencils get wired in a later step.
+  // The Filters button is wired in report-filters.js
   renderReport();
 });
