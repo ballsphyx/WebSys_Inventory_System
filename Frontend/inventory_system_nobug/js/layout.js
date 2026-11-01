@@ -46,3 +46,276 @@ const PAGES = [
     </nav>
     <a href="../index.html" class="logout" id="logout">${ICON.logout}Logout</a>`;
 })();
+
+// ===== Date fields =====
+// The browser draws its own text, icon AND calendar popup for <input type="date">, and none of
+// those follow the zoom-proof sizing used everywhere else (they got huge or tiny when you zoomed).
+// So every date input gets OUR text, calendar icon and calendar popup, all sized with the same
+// units as the other fields (--u inside the pop-ups). The real input stays underneath, invisible,
+// so the page's code still reads a value like "2026-10-31" from it.
+// It works for every date input on every page, including ones created later.
+;(function () {
+  const u = function (n) { return "calc(" + n + " * var(--u, 1rem))"; };   // "n units", zoom-proof
+
+  const css = `
+    .date-field { position: relative; width: 100%; }
+    .date-field input[type="date"] {
+      position: relative; display: block; width: 100%;
+      color: transparent !important;
+      -webkit-text-fill-color: transparent;
+      caret-color: transparent;
+      cursor: pointer;
+    }
+    .date-field input[type="date"]::-webkit-datetime-edit { opacity: 0; }
+    .date-field input[type="date"]::-webkit-inner-spin-button { display: none; }
+    .date-field input[type="date"]::-webkit-calendar-picker-indicator { display: none; }
+    .date-field .date-view {
+      position: absolute; top: 0; bottom: 0;
+      left: ${u(1.1)}; right: ${u(3.6)};
+      display: flex; align-items: center;
+      font-family: inherit; font-size: ${u(1.15)};
+      color: #222222; white-space: nowrap; pointer-events: none;
+    }
+    .date-field.is-empty .date-view { color: #9a9a9a; }
+    .date-field .date-icon {
+      position: absolute; top: 50%; right: ${u(1)};
+      width: ${u(1.5)}; height: ${u(1.5)};
+      transform: translateY(-50%); color: #9a9a9a; pointer-events: none;
+    }
+
+    /* our own calendar popup */
+    .cal {
+      position: absolute; z-index: 30; right: 0; top: calc(100% + ${u(0.6)});
+      width: ${u(28)}; padding: ${u(1.4)} ${u(1.4)} ${u(1)};
+      background: #ffffff; color: #222222; font-family: inherit;
+      border: ${u(0.1)} solid #e1e1e1; border-radius: ${u(0.8)};
+      box-shadow: 0 ${u(0.4)} ${u(1.6)} rgba(0, 0, 0, 0.25);
+    }
+    .cal[hidden] { display: none; }
+    .cal.up { top: auto; bottom: calc(100% + ${u(0.6)}); }
+    .cal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: ${u(1)}; }
+    .cal-title { flex: 1; text-align: center; font-size: ${u(1.2)}; font-weight: 500; }
+    .cal-nav {
+      width: ${u(2.4)}; height: ${u(2.4)}; padding: 0; border: none; border-radius: 50%;
+      background: none; color: #555555; font-family: inherit; font-size: ${u(1.5)}; line-height: 1; cursor: pointer;
+    }
+    .cal-nav:hover { background: #eef5f1; color: #1b3f31; }
+    .cal-week, .cal-days { display: grid; grid-template-columns: repeat(7, 1fr); }
+    .cal-week span { padding: ${u(0.4)} 0 ${u(0.6)}; text-align: center; font-size: ${u(0.95)}; color: #888888; }
+    .cal-days button {
+      height: ${u(3.3)}; margin: ${u(0.1)}; padding: 0;
+      border: ${u(0.1)} solid transparent; border-radius: ${u(0.6)};
+      background: none; color: #222222; font-family: inherit; font-size: ${u(1.1)}; cursor: pointer;
+    }
+    .cal-days button:hover { background: #eef5f1; }
+    .cal-days button.other { color: #b5b5b5; }
+    .cal-days button.today { border-color: #2a5c47; }
+    .cal-days button.sel { background: #2a5c47; border-color: #2a5c47; color: #ffffff; }
+    .cal-foot {
+      display: flex; justify-content: space-between;
+      margin-top: ${u(0.8)}; padding-top: ${u(0.8)}; border-top: ${u(0.1)} solid #eeeeee;
+    }
+    .cal-foot button {
+      height: ${u(2.2)}; padding: 0 ${u(0.4)}; border: none; background: none;
+      color: #2a5c47; font-family: inherit; font-size: ${u(1.05)};
+      text-decoration: underline; cursor: pointer;
+    }
+    .cal-foot button:hover { color: #1b3f31; }
+    .cal button:focus-visible { outline: ${u(0.125)} solid #2563eb; outline-offset: ${u(0.1)}; }`;
+
+  const style = document.createElement("style");
+  style.textContent = css;
+  document.head.appendChild(style);
+
+  const ICON_HTML =
+    '<svg class="date-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" ' +
+    'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+    '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/></svg>';
+
+  const MONTH_NAMES = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+  const WEEKDAYS = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
+  const pad = function (n) { return String(n).padStart(2, "0"); };
+  const toISO = function (d) { return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate()); };
+  const parse = function (iso) {
+    const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso || "");
+    return m ? new Date(+m[1], +m[2] - 1, +m[3]) : null;
+  };
+
+  const valueProp = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value");
+  let openCal = null;                       // only one calendar is open at a time
+
+  function enhance(input) {
+    if (input.dataset.dateField) return;
+    input.dataset.dateField = "1";
+
+    const hadFocus = document.activeElement === input;
+    input.readOnly = true;                  // the calendar is the way to pick; no typing into hidden segments
+
+    const wrap = document.createElement("div");
+    wrap.className = "date-field";
+    const view = document.createElement("span");
+    view.className = "date-view";
+    view.setAttribute("aria-hidden", "true");
+
+    input.parentNode.insertBefore(wrap, input);
+    wrap.appendChild(input);
+    wrap.appendChild(view);
+    wrap.insertAdjacentHTML("beforeend", ICON_HTML);
+
+    const cal = document.createElement("div");
+    cal.className = "cal";
+    cal.hidden = true;
+    wrap.appendChild(cal);
+
+    let viewY = 0, viewM = 0;
+    const api = { close: close };
+
+    // the text on top of the input: mm/dd/yyyy, or the grey placeholder when it is empty
+    function update() {
+      const d = parse(valueProp.get.call(input));
+      view.textContent = d ? pad(d.getMonth() + 1) + "/" + pad(d.getDate()) + "/" + d.getFullYear() : "mm/dd/yyyy";
+      wrap.classList.toggle("is-empty", !d);
+      if (!cal.hidden) render();
+    }
+
+    // when the page sets the value in code (input.value = ""), the text on top follows
+    Object.defineProperty(input, "value", {
+      configurable: true,
+      get: function () { return valueProp.get.call(this); },
+      set: function (v) { valueProp.set.call(this, v); update(); }
+    });
+
+    input.addEventListener("input", update);
+    input.addEventListener("change", update);
+    if (input.form) input.form.addEventListener("reset", function () { setTimeout(update, 0); });
+
+    function setValue(iso) {
+      valueProp.set.call(input, iso);
+      update();
+      input.dispatchEvent(new Event("input", { bubbles: true }));
+      input.dispatchEvent(new Event("change", { bubbles: true }));
+    }
+
+    function render() {
+      const selected = valueProp.get.call(input);
+      const today = toISO(new Date());
+      const offset = new Date(viewY, viewM, 1).getDay();          // blank days before the 1st
+
+      let days = "";
+      for (let i = 0; i < 42; i++) {                              // 6 weeks, so the height never changes
+        const d = new Date(viewY, viewM, 1 - offset + i);
+        const iso = toISO(d);
+        const cls = (d.getMonth() !== viewM ? " other" : "") + (iso === today ? " today" : "") + (iso === selected ? " sel" : "");
+        days += '<button type="button" class="' + cls.trim() + '" data-date="' + iso + '">' + d.getDate() + "</button>";
+      }
+
+      cal.innerHTML =
+        '<div class="cal-head">' +
+          '<button type="button" class="cal-nav" data-nav="-12" aria-label="Previous year">\u00AB</button>' +
+          '<button type="button" class="cal-nav" data-nav="-1" aria-label="Previous month">\u2039</button>' +
+          '<span class="cal-title">' + MONTH_NAMES[viewM] + " " + viewY + "</span>" +
+          '<button type="button" class="cal-nav" data-nav="1" aria-label="Next month">\u203A</button>' +
+          '<button type="button" class="cal-nav" data-nav="12" aria-label="Next year">\u00BB</button>' +
+        "</div>" +
+        '<div class="cal-week">' + WEEKDAYS.map(function (w) { return "<span>" + w + "</span>"; }).join("") + "</div>" +
+        '<div class="cal-days">' + days + "</div>" +
+        '<div class="cal-foot">' +
+          '<button type="button" data-act="clear">Clear</button>' +
+          '<button type="button" data-act="today">Today</button>' +
+        "</div>";
+    }
+
+    function open(byKeyboard) {
+      if (openCal && openCal !== api) openCal.close();
+      const start = parse(valueProp.get.call(input)) || new Date();
+      viewY = start.getFullYear();
+      viewM = start.getMonth();
+      render();
+
+      cal.classList.remove("up");
+      cal.hidden = false;
+      // not enough room below the field: open upwards instead
+      const field = wrap.getBoundingClientRect();
+      const height = cal.offsetHeight;
+      if (field.bottom + height + 12 > window.innerHeight && field.top - height - 12 > 0) cal.classList.add("up");
+
+      openCal = api;
+      if (byKeyboard) {
+        const first = cal.querySelector(".sel") || cal.querySelector(".today") || cal.querySelector(".cal-days button");
+        if (first) first.focus();
+      }
+    }
+
+    function close() {
+      cal.hidden = true;
+      if (openCal === api) openCal = null;
+    }
+
+    // clicking the field toggles our calendar (the browser's own popup is blocked)
+    input.addEventListener("mousedown", function (e) {
+      e.preventDefault();
+      input.focus();
+    });
+    input.addEventListener("click", function () {
+      if (cal.hidden) open(false); else close();
+    });
+    input.addEventListener("keydown", function (e) {
+      if (e.key === "Enter" || e.key === " " || e.key === "ArrowDown") {
+        e.preventDefault();
+        open(true);
+      }
+    });
+
+    cal.addEventListener("keydown", function (e) {
+      if (e.key === "Escape") {
+        e.stopPropagation();
+        close();
+        input.focus();
+      }
+    });
+
+    cal.addEventListener("click", function (e) {
+      const nav = e.target.closest("[data-nav]");
+      const day = e.target.closest("[data-date]");
+      const act = e.target.closest("[data-act]");
+
+      if (nav) {
+        const d = new Date(viewY, viewM + Number(nav.dataset.nav), 1);
+        viewY = d.getFullYear();
+        viewM = d.getMonth();
+        render();
+        const again = cal.querySelector('[data-nav="' + nav.dataset.nav + '"]');
+        if (again && e.detail === 0) again.focus();          // keep the keyboard on the same arrow
+      } else if (day) {
+        setValue(day.dataset.date);
+        close();
+        input.focus();
+      } else if (act) {
+        setValue(act.dataset.act === "today" ? toISO(new Date()) : "");
+        close();
+        input.focus();
+      }
+    });
+
+    update();
+    if (hadFocus) input.focus();         // moving the input into its wrapper would otherwise drop focus
+  }
+
+  // clicking anywhere outside an open calendar closes it
+  document.addEventListener("mousedown", function (e) {
+    if (openCal && !e.target.closest(".date-field")) openCal.close();
+  });
+
+  function scan(node) {
+    if (!node || node.nodeType !== 1) return;
+    if (node.matches('input[type="date"]')) enhance(node);
+    node.querySelectorAll('input[type="date"]').forEach(enhance);
+  }
+
+  scan(document.body);
+
+  // pop-ups that build their fields later (like the Reports Filters) are picked up here
+  new MutationObserver(function (records) {
+    records.forEach(function (r) { r.addedNodes.forEach(scan); });
+  }).observe(document.body, { childList: true, subtree: true });
+})();

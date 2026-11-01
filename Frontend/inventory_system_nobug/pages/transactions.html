@@ -44,6 +44,7 @@
               <path d="M4 7h16M7 12h10M10 17h4" />
             </svg>
             Filters
+            <span class="f-count" id="fCount" hidden></span>
           </button>
         </div>
 
@@ -116,6 +117,121 @@
         <div class="dialog-actions">
           <button type="button" class="btn-discard" id="discardBtn">Discard</button>
           <button type="submit" class="btn-submit">Add Transaction</button>
+        </div>
+
+      </form>
+    </section>
+  </div>
+
+  <!-- Pop-up: Edit Transaction (same look as Add Transaction) -->
+  <div class="modal-overlay" id="editModal" hidden aria-hidden="true">
+    <section class="dialog" role="dialog" aria-modal="true" aria-labelledby="editTitle">
+
+      <h2 class="dialog-title" id="editTitle">Edit Transaction</h2>
+      <p class="dialog-sub">Update the details for this transaction below</p>
+
+      <form id="editForm" novalidate>
+
+        <div class="type-row" role="radiogroup" aria-label="Type">
+          <span class="type-label">Type:</span>
+          <div class="type-opts">
+            <label class="opt"><span>In</span><input type="radio" name="etype" value="In" checked /></label>
+            <label class="opt"><span>Out</span><input type="radio" name="etype" value="Out" /></label>
+            <label class="opt"><span>Adjustment</span><input type="radio" name="etype" value="Adjustment" /></label>
+          </div>
+        </div>
+
+        <div class="f-row">
+          <label for="eName">Product Name</label>
+          <input type="text" id="eName" name="name" list="productList" placeholder="Enter product name" autocomplete="off" />
+        </div>
+
+        <div class="f-row">
+          <label for="eCategory">Category</label>
+          <select id="eCategory" name="category">
+            <option value="" selected disabled>Select product category</option>
+            <option value="phone">Phone</option>
+            <option value="laptop">Laptop</option>
+            <option value="tablet">Tablet</option>
+            <option value="accessories">Accessories</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+
+        <div class="f-row">
+          <label for="ePrice">Price</label>
+          <input type="text" id="ePrice" name="price" placeholder="Enter product price" inputmode="decimal" autocomplete="off" />
+        </div>
+
+        <div class="f-row last">
+          <label for="eQty">Quantity</label>
+          <input type="text" id="eQty" name="quantity" placeholder="Enter quantity" inputmode="numeric" autocomplete="off" />
+        </div>
+
+        <p class="form-error" id="editError" role="alert"></p>
+
+        <div class="dialog-actions">
+          <button type="button" class="btn-discard" id="editDiscardBtn">Discard</button>
+          <button type="submit" class="btn-submit">Edit Transaction</button>
+        </div>
+
+      </form>
+    </section>
+  </div>
+
+  <!-- Pop-up: Filters -->
+  <div class="modal-overlay" id="filterModal" hidden aria-hidden="true">
+    <section class="dialog" role="dialog" aria-modal="true" aria-labelledby="filterTitle">
+
+      <h2 class="dialog-title" id="filterTitle">Filter Transactions</h2>
+      <p class="dialog-sub">Choose what you want to see in the table</p>
+
+      <form id="filterForm" novalidate>
+
+        <div class="f-row">
+          <label for="fFrom">From</label>
+          <input type="date" id="fFrom" name="from" />
+        </div>
+
+        <div class="f-row">
+          <label for="fTo">To</label>
+          <input type="date" id="fTo" name="to" />
+        </div>
+
+        <div class="f-row">
+          <label for="fType">Type</label>
+          <select id="fType" name="type">
+            <option value="">All types</option>
+            <option value="In">In</option>
+            <option value="Out">Out</option>
+            <option value="Adjustment">Adjustment</option>
+          </select>
+        </div>
+
+        <div class="f-row">
+          <label for="fStatus">Status</label>
+          <select id="fStatus" name="status">
+            <option value="">All statuses</option>
+            <option value="Completed">Completed</option>
+            <option value="Pending">Pending</option>
+            <option value="Cancelled">Cancelled</option>
+          </select>
+        </div>
+
+        <div class="f-row last">
+          <label for="fCategory">Category</label>
+          <select id="fCategory" name="category">
+            <option value="">All categories</option>
+          </select>
+        </div>
+
+        <button type="button" class="f-clear" id="fClear">Clear filters</button>
+
+        <p class="form-error" id="filterError" role="alert"></p>
+
+        <div class="dialog-actions">
+          <button type="button" class="btn-discard" id="filterDiscardBtn">Discard</button>
+          <button type="submit" class="btn-submit">Apply Filters</button>
         </div>
 
       </form>

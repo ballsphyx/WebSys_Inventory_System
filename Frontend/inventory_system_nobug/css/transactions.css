@@ -92,6 +92,15 @@
 .btn-filters svg { width: 1.4rem; height: 1.4rem; }
 .btn-filters:hover { background: #f6f6f6; }
 
+/* Filters button once something is applied: green outline + a small number */
+.btn-filters.on { border-color: #2a5c47; background: #f1f7f4; color: #1b3f31; }
+.f-count {
+  min-width: 1.7rem; height: 1.7rem; padding: 0 0.45rem;
+  border-radius: 999px; background: #1b3f31; color: #fff;
+  font-size: 1rem; line-height: 1.7rem; text-align: center;
+}
+.f-count[hidden] { display: none; }
+
 /* shared column layout for the header row and every row.
    The LAST column (the pencil) is 29 parts wide and starts at 678 of 707 parts,
    exactly like the Inventory page, so the pencil sits in the same spot on both pages.
@@ -164,7 +173,7 @@
 }
 .page-info b { font-weight: 600; }
 
-/* ---------- Pop-up: Add Transaction ---------- */
+/* ---------- Pop-ups: Add Transaction, Edit Transaction, Filters ---------- */
 
 /* The pop-up area is exactly the content area, so a tall box can no longer
    stretch it and push the box off-center. */
@@ -172,7 +181,7 @@
   grid-template-rows: var(--topbar-h) minmax(0, 1fr);
 }
 
-/* Every size inside the pop-up is "N * --u".
+/* Every size inside the pop-ups is "N * --u".
    --u is 1rem (like the rest of the page) but shrinks on short windows,
    so the whole box always fits and stays centered in the content area. */
 .dialog {
@@ -327,6 +336,12 @@
   color: #222222;
 }
 
+/* Filters pop-up: "All ..." and empty dates look like a placeholder */
+.f-row select.is-empty,
+.f-row input[type="date"].is-empty {
+  color: #9a9a9a;
+}
+
 .f-row input:focus,
 .f-row select:focus {
   border-color: #2a5c47;
@@ -381,3 +396,23 @@
   outline: calc(0.125 * var(--u)) solid #2563eb;
   outline-offset: calc(0.15 * var(--u));
 }
+
+/* Filters pop-up: five rows, so the spacing is a little tighter than Add/Edit */
+#filterModal .dialog-sub { margin-bottom: calc(3.2 * var(--u)); }
+#filterModal .f-row { margin-bottom: calc(1.8 * var(--u)); }
+#filterModal .f-row.last { margin-bottom: 0; }
+
+/* small "Clear filters" link under the fields */
+.f-clear {
+  display: block;
+  margin: calc(1 * var(--u)) 0 0 auto;
+  height: calc(2 * var(--u));
+  border: none;
+  background: none;
+  color: #2a5c47;
+  font-family: inherit;
+  font-size: calc(1.05 * var(--u));
+  text-decoration: underline;
+  cursor: pointer;
+}
+.f-clear:hover { color: #1b3f31; }
