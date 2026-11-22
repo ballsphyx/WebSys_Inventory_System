@@ -7,65 +7,10 @@ const PAGE_SIZE = 13;
 let currentFilter = "all";
 let currentPage = 1;
 
-/* ------------------------------------------------------------------
-   DATA LAYER: the ONLY place the backend needs to connect.
-   For now products are kept in this browser's localStorage so you can
-   test the pop-ups. When the backend is ready, replace these three
-   functions with calls to the server:
-     getProducts()          -> GET all products
-     addProduct(data)       -> POST a new product
-     updateProduct(id, data)-> PUT/PATCH an existing product
------------------------------------------------------------------- */
-const STORE_KEY = "inventory_products";
-
-function getProducts() {
-  try {
-    return JSON.parse(localStorage.getItem(STORE_KEY)) || [];
-  } catch (e) {
-    return [];
-  }
-}
-
-function saveProducts(list) {
-  try { localStorage.setItem(STORE_KEY, JSON.stringify(list)); } catch (e) {}
-}
-
-function addProduct(data) {
-  const list = getProducts();
-
-  // the backend will generate the real ID; this makes a unique 6-digit one for now
-  let id;
-  do {
-    id = String(Math.floor(100000 + Math.random() * 900000));
-  } while (list.some(function (p) { return p.id === id; }));
-
-  const product = {
-    id: id,
-    name: data.name,
-    category: data.category,
-    price: data.price,
-    stock: 0,            // stock goes up later through Transactions
-    image: data.image || ""
-  };
-
-  list.push(product);
-  saveProducts(list);
-  return product;
-}
-
-function updateProduct(id, data) {
-  const list = getProducts();
-  const product = list.find(function (p) { return p.id === id; });
-  if (!product) return null;
-
-  // only the fields in the Edit form change; id, stock and image stay as they are
-  product.name = data.name;
-  product.category = data.category;
-  product.price = data.price;
-
-  saveProducts(list);
-  return product;
-}
+/* ------------------------------ API data layer ------------------------------ */
+function getProducts() { return InventoryAPI.products(); }
+async function addProduct(data) { return InventoryAPI.createProduct(data); }
+async function updateProduct(id, data) { return InventoryAPI.updateProduct(id, data); }
 
 /* ------------------------------ Table ------------------------------ */
 function statusOf(p) {
@@ -106,13 +51,22 @@ function nameCell(p) {
 
 function editCell(id) {
   const s = document.createElement("span");
-  const b = document.createElement("button");
-  b.type = "button";
-  b.className = "edit-btn";
-  b.setAttribute("aria-label", "Edit product");
-  if (id != null) b.dataset.id = id;
-  b.innerHTML = PENCIL;
-  s.appendChild(b);
+  const edit = document.createElement("button");
+  edit.type = "button"; edit.className = "edit-btn";
+  edit.setAttribute("aria-label", "Edit product");
+  if (id != null) edit.dataset.id = id;
+  edit.innerHTML = PENCIL;
+  s.appendChild(edit);
+  if (id != null) {
+    const remove = document.createElement("button");
+    remove.type = "button"; remove.className = "edit-btn delete-btn";
+    remove.setAttribute("aria-label", "Delete product");
+    remove.dataset.id = id;
+    remove.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2m3 0-1 14H6L5 6m4 4v6m6-6v6"/></svg>';
+    remove.style.marginLeft = "0.35rem";
+    remove.style.color = "#b42318";
+    s.appendChild(remove);
+  }
   return s;
 }
 
@@ -256,12 +210,11 @@ function setupAddModal() {
     openBtn.focus();
   });
 
-  form.addEventListener("submit", function (e) {
+  form.addEventListener("submit", async function (e) {
     e.preventDefault();
     const data = fields.read();
     if (!data) return;
-
-    addProduct(data);
+    try { await addProduct(data); } catch (error) { return fields.readError ? fields.readError(error.message) : alert(error.message); }
 
     // jump to the last page of "All" so the new product is visible
     showTab("all");
@@ -332,22 +285,32 @@ function setupEditModal() {
     modal.open();
   }
 
-  form.addEventListener("submit", function (e) {
+  form.addEventListener("submit", async function (e) {
     e.preventDefault();
     const data = fields.read();
     if (!data) return;
-
-    updateProduct(editingId, data);
-    render();            // stays on the same page and tab, the row updates in place
-    modal.close();
+    try {
+      await updateProduct(editingId, data);
+      render();
+      modal.close();
+    } catch (error) { alert(error.message); }
   });
 
   document.getElementById("editDiscardBtn").addEventListener("click", modal.close);
 
   // one listener for every pencil (rows are rebuilt on each render)
-  document.getElementById("rows").addEventListener("click", function (e) {
+  document.getElementById("rows").addEventListener("click", async function (e) {
     const btn = e.target.closest(".edit-btn");
-    if (!btn || !btn.dataset.id) return;     // empty placeholder rows have no product
+    if (!btn || !btn.dataset.id) return;
+    if (btn.classList.contains("delete-btn")) {
+      const product = getProducts().find(p => p.id === btn.dataset.id);
+      if (!product || !confirm(`Delete ${product.name}? This cannot be undone.`)) return;
+      try {
+        await InventoryAPI.deleteProduct(btn.dataset.id);
+        render();
+      } catch (error) { alert(error.message); }
+      return;
+    }
     openFor(btn.dataset.id);
   });
 }
@@ -369,5 +332,5 @@ document.addEventListener("DOMContentLoaded", function () {
   setupEditModal();
 
   // Filters gets its pop-up in the next step.
-  render();
+  InventoryAPI.refreshProducts().then(render).catch(error => alert("Could not load inventory: " + error.message));
 });

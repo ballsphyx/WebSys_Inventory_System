@@ -45,11 +45,9 @@ let reportFilters = {};          // what was chosen in the Filters pop-up, kept 
    (GET /reports/daily, /weekly, /monthly, /product, /category, /top, /revenue, /movement) that sends the same shape.
 ------------------------------------------------------------------ */
 function readList(key) {
-  try {
-    return JSON.parse(localStorage.getItem(key)) || [];
-  } catch (e) {
-    return [];
-  }
+  if (key === "inventory_products") return InventoryAPI.products();
+  if (key === "inventory_transactions") return InventoryAPI.transactions();
+  return [];
 }
 
 function parseISO(iso) {
@@ -700,5 +698,5 @@ document.addEventListener("DOMContentLoaded", function () {
   document.getElementById("nextBtn").addEventListener("click", function () { reportPage++; renderReport(); });
 
   // The Filters button is wired in report-filters.js
-  renderReport();
+  InventoryAPI.refreshAll().then(renderReport).catch(error => alert("Could not load reports: " + error.message));
 });

@@ -11,37 +11,9 @@ let txFilter = "all";            // the tab: all / In Stock / Low Stock / Out of
 let txPage = 1;
 let txFilters = {};              // what was chosen in the Filters pop-up: { from, to, type, status, category }
 
-/* ------------------------------------------------------------------
-   DATA LAYER: the ONLY place the backend needs to connect.
-   For now everything is kept in this browser's localStorage:
-     "inventory_transactions"  -> this page's list
-     "inventory_products"      -> the Inventory page's list (a transaction changes its stock)
-   When the backend is ready, replace these functions with calls to the server:
-     getTransactions()            -> GET all transactions (the Filters can be sent as ?from=&to=&type=&status=&category=)
-     getProducts()                -> GET all products
-     addTransaction(data)         -> POST a transaction
-     updateTransaction(id, data)  -> PUT/PATCH a transaction
-   For both add and update, the SERVER should save the transaction AND fix the product's stock
-   in one step, then send back the transaction (or an error message like the ones below).
-   Updating = undo the old transaction's effect on stock, then apply the corrected one.
------------------------------------------------------------------- */
-const TX_STORE_KEY = "inventory_transactions";
-const PRODUCTS_KEY = "inventory_products";
-
-function readList(key) {
-  try {
-    return JSON.parse(localStorage.getItem(key)) || [];
-  } catch (e) {
-    return [];
-  }
-}
-
-function writeList(key, list) {
-  try { localStorage.setItem(key, JSON.stringify(list)); } catch (e) {}
-}
-
-function getTransactions() { return readList(TX_STORE_KEY); }
-function getProducts() { return readList(PRODUCTS_KEY); }
+/* ------------------------------ API data layer ------------------------------ */
+function getTransactions() { return InventoryAPI.transactions(); }
+function getProducts() { return InventoryAPI.products(); }
 
 function productByName(products, name) {
   const wanted = String(name || "").trim().toLowerCase();
@@ -88,114 +60,31 @@ function changeFor(list, id) {
   return 0;
 }
 
-// data: { type: "In" | "Out" | "Adjustment", name, category, price, quantity }
-// returns { transaction } on success, or { error, field } when something is wrong
-function addTransaction(data) {
-  const products = getProducts();
-  const product = productByName(products, data.name);
-
-  if (!product) {
-    return { error: "That product isn't in Inventory yet. Add it there first.", field: "name" };
-  }
-  if (String(product.category).toLowerCase() !== String(data.category).toLowerCase()) {
+// All stock changes are validated and committed atomically by the backend.
+async function addTransaction(data) {
+  const product = productByName(getProducts(), data.name);
+  if (!product) return { error: "That product isn't in Inventory yet. Add it there first.", field: "name" };
+  if (String(product.category).toLowerCase() !== String(data.category).toLowerCase())
     return { error: product.name + " is in the " + product.category + " category.", field: "category" };
+  try {
+    const transaction = await InventoryAPI.createTransaction({ product_id: product.id, type: data.type, quantity: data.quantity, price: data.price });
+    return { transaction };
+  } catch (error) {
+    return { error: error.message, field: error.message.toLowerCase().includes("stock") ? "quantity" : "name" };
   }
-
-  const current = Number(product.stock) || 0;
-  let newStock;
-
-  if (data.type === "In") {
-    newStock = current + data.quantity;
-  } else if (data.type === "Out") {
-    if (data.quantity > current) {
-      return { error: "Only " + current + " in stock, so you can't take out " + data.quantity + ".", field: "quantity" };
-    }
-    newStock = current - data.quantity;
-  } else {
-    newStock = data.quantity;          // Adjustment: the quantity is the corrected stock level
-  }
-
-  product.stock = newStock;
-  writeList(PRODUCTS_KEY, products);
-
-  // the backend will generate the real ID; this makes a unique one for now
-  const all = getTransactions();
-  let id;
-  do {
-    id = "TX-" + String(Math.floor(100000 + Math.random() * 900000));
-  } while (all.some(function (t) { return t.id === id; }));
-
-  const transaction = {
-    id: id,
-    date: todayISO(),
-    product: product.name,
-    category: product.category,
-    price: data.price,
-    quantity: data.quantity,
-    type: data.type,
-    change: newStock - current,
-    status: "Completed",
-    stockStatus: stockStatusOf(newStock)
-  };
-
-  all.unshift(transaction);            // newest first
-  writeList(TX_STORE_KEY, all);
-  return { transaction: transaction };
 }
 
-// Edit a transaction: undo its old effect on stock, then apply the corrected one.
-// Nothing is saved unless every product ends up with 0 or more in stock.
-// The ID, date and status stay as they were.
-function updateTransaction(id, data) {
-  const all = getTransactions();
-  const index = all.findIndex(function (t) { return t.id === id; });
-  if (index === -1) return { error: "That transaction could not be found.", field: "name" };
-  const old = all[index];
-
-  const products = getProducts();
-  const target = productByName(products, data.name);
-
-  if (!target) {
-    return { error: "That product isn't in Inventory yet. Add it there first.", field: "name" };
+async function updateTransaction(id, data) {
+  const product = productByName(getProducts(), data.name);
+  if (!product) return { error: "That product isn't in Inventory yet. Add it there first.", field: "name" };
+  if (String(product.category).toLowerCase() !== String(data.category).toLowerCase())
+    return { error: product.name + " is in the " + product.category + " category.", field: "category" };
+  try {
+    const transaction = await InventoryAPI.updateTransaction(id, { product_id: product.id, type: data.type, quantity: data.quantity, price: data.price });
+    return { transaction };
+  } catch (error) {
+    return { error: error.message, field: error.message.toLowerCase().includes("stock") ? "quantity" : "name" };
   }
-  if (String(target.category).toLowerCase() !== String(data.category).toLowerCase()) {
-    return { error: target.name + " is in the " + target.category + " category.", field: "category" };
-  }
-
-  // 1) undo the old transaction
-  const oldProduct = productByName(products, old.product);
-  if (oldProduct) oldProduct.stock = (Number(oldProduct.stock) || 0) - changeFor(all, id);
-
-  // 2) apply the corrected one
-  const current = Number(target.stock) || 0;       // already undone when it is the same product
-  let newStock;
-  if (data.type === "In") newStock = current + data.quantity;
-  else if (data.type === "Out") newStock = current - data.quantity;
-  else newStock = data.quantity;
-
-  // 3) nothing may end up below zero
-  if (newStock < 0) {
-    return { error: "That would leave " + target.name + " with " + newStock + " in stock, which isn't possible.", field: "quantity" };
-  }
-  if (oldProduct && oldProduct !== target && oldProduct.stock < 0) {
-    return { error: "Undoing the old transaction would leave " + oldProduct.name + " below zero stock.", field: "name" };
-  }
-
-  target.stock = newStock;
-
-  all[index] = Object.assign({}, old, {
-    product: target.name,
-    category: target.category,
-    price: data.price,
-    quantity: data.quantity,
-    type: data.type,
-    change: newStock - current,
-    stockStatus: stockStatusOf(newStock)
-  });
-
-  writeList(PRODUCTS_KEY, products);
-  writeList(TX_STORE_KEY, all);
-  return { transaction: all[index] };
 }
 
 /* ------------------------------ Filters ------------------------------ */
@@ -460,12 +349,11 @@ function setupAddModal() {
     openBtn.focus();
   });
 
-  form.addEventListener("submit", function (e) {
+  form.addEventListener("submit", async function (e) {
     e.preventDefault();
     const data = fields.read();
     if (!data) return;
-
-    const result = addTransaction(data);
+    const result = await addTransaction(data);
     if (result.error) return fields.showResultError(result);
 
     // show the newest transaction: it is at the top of the "All" tab
@@ -530,12 +418,11 @@ function setupEditModal() {
     modal.open();
   }
 
-  form.addEventListener("submit", function (e) {
+  form.addEventListener("submit", async function (e) {
     e.preventDefault();
     const data = fields.read();
     if (!data) return;
-
-    const result = updateTransaction(editingId, data);
+    const result = await updateTransaction(editingId, data);
     if (result.error) return fields.showResultError(result);
 
     renderTransactions();        // stays on the same page and tab, the row updates in place
@@ -665,5 +552,5 @@ document.addEventListener("DOMContentLoaded", function () {
   setupEditModal();
   setupFilterModal();
 
-  renderTransactions();
+  InventoryAPI.refreshAll().then(renderTransactions).catch(error => alert("Could not load transactions: " + error.message));
 });

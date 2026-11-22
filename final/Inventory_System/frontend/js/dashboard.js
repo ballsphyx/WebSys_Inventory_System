@@ -2,11 +2,8 @@
 // Each item the backend sends will look like:
 //   { name: "Sony WH-1000XM4", left: 2, image: "https://.../sony.jpg" }
 // "image" is optional. With no image (or a broken link) the grey box stays.
-function getLowStock() {
-  // Later this will come from data.js (and then the backend).
-  // While it returns nothing, the page keeps the grey placeholder rows from your design.
-  return [];
-}
+let dashboardData = null;
+function getLowStock() { return (dashboardData?.lowStockItems || []).map(p => ({ name: p.name, left: p.stock, image: p.image })); }
 
 function makeThumb(image, name) {
   const thumb = document.createElement("div");
@@ -52,7 +49,26 @@ function renderLowStock() {
 
 // ===== Recent Activity "View all" pop-up =====
 document.addEventListener("DOMContentLoaded", function () {
-  renderLowStock();
+  InventoryAPI.request("/api/dashboard").then(data => {
+    dashboardData = data;
+    renderLowStock();
+    const values = { statProducts: data.totalProducts, statStocks: data.totalStocks, statLow: data.lowStocks, statOut: data.outOfStocks };
+    Object.entries(values).forEach(([id, value]) => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = Number(value).toLocaleString();
+    });
+    const activityList = document.getElementById("activityList");
+    if (activityList) {
+      activityList.innerHTML = "";
+      data.recentTransactions.slice(0, 4).forEach(t => {
+        const li = document.createElement("li");
+        const dot = document.createElement("i"); dot.className = "adot adot-" + (t.type === "In" ? "green" : t.type === "Out" ? "red" : "blue");
+        const text = document.createElement("span"); text.className = "a-text"; text.textContent = `${t.type === "In" ? "Stock In" : t.type === "Out" ? "Stock Out" : "Adjustment"} · ${t.product}`;
+        const time = document.createElement("span"); time.className = "a-time"; time.textContent = new Date(t.date).toLocaleDateString();
+        li.append(dot, text, time); activityList.appendChild(li);
+      });
+    }
+  }).catch(error => console.error("Dashboard API error:", error));
 
   const modal = document.getElementById("activityModal");
   const list = document.getElementById("activityModalList");
@@ -68,7 +84,10 @@ document.addEventListener("DOMContentLoaded", function () {
   // Later this will come from data.js (and then the backend).
   // For now it returns nothing, so the pop-up shows empty placeholder rows like your design.
   function getActivity() {
-    return [];   // each item will look like: { text: "Added to stock", time: "2 hrs ago", color: "green" }
+    return (dashboardData?.recentTransactions || []).map(t => ({
+      text: `${t.type === "In" ? "Stock received" : t.type === "Out" ? "Stock removed" : "Stock adjusted"} · ${t.product} (${t.quantity})`,
+      time: new Date(t.date).toLocaleString(), color: t.type === "In" ? "green" : t.type === "Out" ? "red" : "blue"
+    }));
   }
 
   function renderRows() {
